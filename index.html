@@ -1,1 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0E0E11;color:#EDEDED;transition:.3s}
+body.light{background:#fff;color:#111}
 
+/* Navbar */
+nav{position:fixed;top:0;width:100%;height:60px;display:flex;align-items:center;padding:0 16px;z-index:1000;background:#0E0E11;transition:.3s}
+body.light nav{background:#fff;color:#111}
+nav h1{font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;color:inherit;transition:.1s;cursor:pointer;user-select:none;}
+nav input{margin-left:16px;flex:1;max-width:220px;padding:6px 12px;border-radius:12px;border:1px solid #555;background:#1C1C1C;color:#EDEDED;transition:.3s;outline:none;}
+body.light nav input{background:#f2f2f2;color:#111;border:1px solid #ccc;}
+
+/* Engrenagem tema */
+#theme-gear{position:absolute;right:30px;font-size:1.5rem;cursor:pointer;top:50%;transform:translateY(-50%);}
+#theme-menu{display:none;position:absolute;top:110%;right:0;background:#18181F;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.4);flex-direction:column;}
+#theme-menu button{padding:8px 12px;border:none;background:none;color:#fff;cursor:pointer;width:100%;text-align:left;}
+#theme-menu button:hover{background:#333;}
+body.light #theme-menu{background:#f2f2f2;color:#111;}
+body.light #theme-menu button:hover{background:#ddd;color:#111;}
+
+/* Main grid layout */
+main{padding-top:80px;padding-bottom:120px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+
+/* Cards */
+.card{position:relative;border-radius:16px;overflow:hidden;background:#18181F;cursor:pointer;transition:.3s;}
+.card img{width:100%;display:block;border-radius:16px;object-fit:cover;height:220px;opacity:0;transition:opacity .4s ease-in;}
+.card img.loaded{opacity:1;}
+
+/* Fade-in cards */
+.fade-in{animation:fadeIn .5s forwards}
+@keyframes fadeIn{to{opacity:1;transform:translateY(0)}}
+
+/* Sugestões autocomplete */
+.autocomplete-suggestions{position:absolute;background:#18181F;color:#fff;border-radius:12px;top:50px;left:16px;right:16px;max-height:200px;overflow-y:auto;z-index:10000;box-shadow:0 5px 15px rgba(0,0,0,.3)}
+body.light .autocomplete-suggestions{background:#f2f2f2;color:#111}
+.suggestion{padding:8px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.2s}
+.suggestion img{width:30px;height:30px;border-radius:6px;object-fit:cover}
+.suggestion:hover{background:#555;color:#fff}
+
+/* Tela detalhe imagem */
+#detail-page{display:none;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:0;background:#0E0E11;color:#EDEDED;min-height:100vh;}
+body.light #detail-page{background:#fff;color:#111}
+#detail-img{width:100%;max-height:80vh;object-fit:contain;margin-bottom:20px;display:block;margin-left:auto;margin-right:auto;opacity:0;transition:opacity .4s ease-in;}
+#detail-desc{max-width:90%;text-align:center;font-size:1rem;color:#ccc;margin-bottom:12px;}
+
+/* Navbar h1 click animation */
+nav h1.clicked{transform:scale(0.95);transition:transform 0.1s ease;}
+
+/* MENU LATERAL */
+#side-menu{position:fixed;top:0;right:-280px;width:280px;height:100%;background:#111;color:#fff;box-shadow:-2px 0 12px rgba(0,0,0,0.5);z-index:1500;padding:20px;display:flex;flex-direction:column;gap:16px;transition:right 0.3s ease;overflow-y:auto;border-top-left-radius:12px;border-bottom-left-radius:12px;}
+#side-menu .close-menu{align-self:flex-end;font-size:1.4rem;background:none;border:none;color:#fff;cursor:pointer;transition:.2s}
+#side-menu .close-menu:hover{color:#aaa}
+#side-menu .profile{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:20px;}
+#side-menu .profile img{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #555;cursor:pointer;}
+#side-menu .profile h2{font-size:1.2rem;font-weight:600;}
+#side-menu .login-btn{padding:10px 16px;border-radius:12px;border:none;background:#555;color:#fff;font-weight:600;cursor:pointer;transition:.3s;width:100%;margin-top:10px;}
+#side-menu .login-btn:hover{background:#333;}
+/* we'll add a .friend-list small area - styled minimally so it doesn't change the look */
+#friends-list{display:flex;flex-direction:column;gap:8px;margin-top:6px;}
+.friend-item{font-size:0.95rem;color:#ccc;cursor:pointer;padding:6px;border-radius:8px;}
+.friend-item:hover{background:#222;color:#fff;}
+#side-menu.open{right:0}
+
+/* Modal login minimalista */
+#login-modal{display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);position:fixed;top:0;left:0;width:100%;height:100%;z-index:3000;}
+body.light #login-modal{background:rgba(255,255,255,0.7);}
+#login-modal .modal-content{max-width:300px;align-items:center;text-align:center;background:#18181F;color:#fff;padding:20px;border-radius:16px;display:flex;flex-direction:column;gap:12px;}
+body.light #login-modal .modal-content{background:#f2f2f2;color:#111;}
+#login-modal input{padding:10px;border-radius:8px;border:1px solid #555;background:#1C1C1C;color:#fff;width:100%;font-weight:600;text-align:center;}
+body.light #login-modal input{background:#fff;color:#111;border:1px solid #ccc;}
+#login-modal button{background:#555;color:#fff;font-weight:600;cursor:pointer;border-radius:12px;width:100%;padding:10px;}
+#login-modal button:hover{background:#333;}
+/* small profile modal (re-uses styles) */
+#profile-modal{display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);position:fixed;top:0;left:0;width:100%;height:100%;z-index:3001;}
+#profile-modal .modal-content{max-width:320px;align-items:center;text-align:center;background:#18181F;color:#fff;padding:20px;border-radius:16px;display:flex;flex-direction:column;gap:12px;}
+#profile-modal img{width:96px;height:96px;border-radius:50%;object-fit:cover;border:2px solid #555;}
+</style>
+</head>
+<body>
+
+<nav>
+<h1>Project</h1>
+<input type="text" id="search" placeholder="Buscar jogos...">
+<div id="theme-gear">⚙
+  <div id="theme-menu">
+    <button data-theme="light">Claro</button>
+    <button data-theme="dark">Escuro</button>
+  </div>
+</div>
+<div class="autocomplete-suggestions" id="suggestions"></div>
+</nav>
+
+<main id="main"></main>
+
+<!-- Tela detalhe -->
+<div id="detail-page">
+  <img id="detail-img" src="">
+  <p id="detail-desc"></p>
+</div>
+
+<!-- Modal login -->
+<div id="login-modal">
+  <div class="modal-content">
+    <h3>Escolha seu nome</h3>
+    <input type="text" id="login-input" placeholder="Seu nome..." maxlength="20">
+    <button id="login-save">Salvar</button>
+  </div>
+</div>
+
+<!-- Profile modal (view other user's profile) -->
+<div id="profile-modal">
+  <div class="modal-content">
+    <h3 id="pm-name">Nome</h3>
+    <img id="pm-pic" src="https://via.placeholder.com/80" alt="Foto">
+    <p id="pm-bio" style="color:#ccc;text-align:center;"></p>
+    <button id="pm-close">Fechar</button>
+  </div>
+</div>
+
+<!-- Menu lateral -->
+<div id="side-menu">
+  <button class="close-menu">&times;</button>
+  <div class="profile">
+    <img id="profile-pic" src="https://via.placeholder.com/80" alt="Foto de perfil">
+    <h2 id="profile-name">Convidado</h2>
+  </div>
+  <div id="friends-list" aria-live="polite"></div>
+  <button class="login-btn">Login</button>
+</div>
+
+<!-- your existing non-module script (keeps all existing behavior intact) -->
+<script>
+/* --- keep existing UI and RAWG search/render code as before --- */
+const API_KEY='bfd4ae3a6ba14d47a3c627bad684acd8';
+const themeGear=document.getElementById('theme-gear');
+const themeMenu=document.getElementById('theme-menu');
+const searchInput=document.getElementById('search');
+const suggestionsDiv=document.getElementById('suggestions');
+const main=document.getElementById('main');
+const detailPage=document.getElementById('detail-page');
+const detailImg=document.getElementById('detail-img');
+const sideMenu=document.getElementById('side-menu');
+const closeMenuBtn=sideMenu.querySelector('.close-menu');
+const loginBtn=sideMenu.querySelector('.login-btn');
+const profileName=document.getElementById('profile-name');
+const profilePic=document.getElementById('profile-pic');
+const loginModal=document.getElementById('login-modal');
+const loginInput=document.getElementById('login-input');
+const loginSave=document.getElementById('login-save');
+
+themeGear.addEventListener('click',()=>{
+  themeMenu.style.display=themeMenu.style.display==='flex'?'none':'flex';
+  themeMenu.style.flexDirection='column';
+});
+themeMenu.querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    if(btn.dataset.theme==='light') document.body.classList.add('light');
+    else document.body.classList.remove('light');
+    themeMenu.style.display='none';
+  });
+});
+
+let startX=0;
+document.addEventListener('touchstart',e=>{
+  startX=e.touches[0].clientX;
+});
+document.addEventListener('touchmove',e=>{
+  const currentX=e.touches[0].clientX;
+  // permite abrir se arrastar de qualquer ponto da tela da direita pra esquerda
+  if(!sideMenu.classList.contains('open') && startX > currentX + 10 && currentX >= 0){
+    sideMenu.classList.add('open');
+  }
+});
+document.addEventListener('touchend',()=>{});
+closeMenuBtn.addEventListener('click',()=>{sideMenu.classList.remove('open');});
+
+loginBtn.addEventListener('click',()=>{loginModal.style.display='flex';});
+loginSave.addEventListener('click',()=>{
+  const username=loginInput.value.trim();
+  if(username){
+    profileName.textContent=username;
+    loginModal.style.display='none';
+    loginBtn.style.display='none';
+    // store minimal local user - we'll sync to Firestore in the module script
+    localStorage.setItem('user', JSON.stringify({ name: username }));
+  }
+});
+loginModal.addEventListener('click',e=>{if(e.target===loginModal) loginModal.style.display='none';});
+
+/* search + render (delay simulated) */
+let currentImage=null;
+let knownGames=[];
+function debounce(func,delay){let timer; return function(...args){clearTimeout(timer);timer=setTimeout(()=>func.apply(this,args),delay);}}
+
+async function fetchGames(query){
+  const res=await fetch(`https://api.rawg.io/api/games?key=${API_KEY}&search=${encodeURIComponent(query)}&page_size=10`);
+  const data=await res.json();
+  return data.results||[];
+}
+
+searchInput.addEventListener('input',debounce(async ()=>{
+  suggestionsDiv.innerHTML='';
+  const val=searchInput.value.trim();
+  if(!val) return;
+
+  // Loading temporário
+  const loading=document.createElement('div');
+  loading.textContent='Carregando...';
+  loading.style.color='#ccc';
+  suggestionsDiv.appendChild(loading);
+
+  await new Promise(res=>setTimeout(res,500)); // delay simulado
+
+  const games=await fetchGames(val);
+  suggestionsDiv.innerHTML='';
+  games.forEach(g=>{
+    const div=document.createElement('div');
+    div.className='suggestion';
+    const img=document.createElement('img');
+    img.src=g.background_image||'https://via.placeholder.com/30';
+    const span=document.createElement('span');
+    span.textContent=g.name;
+    div.appendChild(img); div.appendChild(span);
+    div.addEventListener('click',()=>{
+      searchInput.value=g.name;
+      suggestionsDiv.innerHTML='';
+      renderGames([{
+        name:g.name,
+        desc:g.released||'',
+        img:g.background_image||'https://via.placeholder.com/250'
+      }]);
+    });
+    suggestionsDiv.appendChild(div);
+  });
+},250));
+
+function renderGames(custom=[]){
+  main.innerHTML='';
+  let games=custom.length?custom:JSON.parse(localStorage.getItem('games'))||[];
+  const query=searchInput.value.toLowerCase().trim();
+  if(query) games=games.filter(g=>g.name.toLowerCase().includes(query));
+  games.forEach(g=>{
+    const card=document.createElement('div'); card.className='card';
+    const img=document.createElement('img');
+    img.src=g.img||'https://via.placeholder.com/250';
+    img.onload=()=>img.classList.add('loaded'); // fade-in ao carregar
+    card.appendChild(img);
+    card.onclick=()=>{
+      detailPage.style.display='flex';
+      main.style.display='none';
+      detailImg.style.opacity=0;
+      const tempImg=new Image();
+      tempImg.src=g.img;
+      tempImg.onload=()=>{
+        detailImg.src=tempImg.src;
+        detailImg.style.opacity=1;
+      };
+    };
+    main.appendChild(card);
+    card.classList.add('fade-in');
+  });
+}
+
+/* nav home */
+document.querySelector('nav h1').addEventListener('click',()=>{
+  document.querySelector('nav h1').classList.add('clicked');
+  setTimeout(()=>document.querySelector('nav h1').classList.remove('clicked'),150);
+  detailPage.style.display='none';
+  main.style.display='grid';
+  searchInput.value='';
+  renderGames([]);
+});
+
+renderGames();
+</script>
+
+<!-- module script: Firebase + friends + profile viewing (enhancement only) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCDsIWhMHMRePqWHPVgaTWaEIVfWNVeMQo",
+    authDomain: "project-6787c.firebaseapp.com",
+    projectId: "project-6787c",
+    storageBucket: "project-6787c.appspot.com",
+    messagingSenderId: "603584412230",
+    appId: "1:603584412230:web:1a838dcc5b95e0558a2847"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Elements we will use
+  const sideMenu = document.getElementById('side-menu');
+  const loginBtn = sideMenu.querySelector('.login-btn');
+  const profileNameEl = document.getElementById('profile-name');
+  const friendsListEl = document.getElementById('friends-list');
+  const profilePicEl = document.getElementById('profile-pic');
+
+  const profileModal = document.getElementById('profile-modal');
+  const pmName = document.getElementById('pm-name');
+  const pmPic = document.getElementById('pm-pic');
+  const pmBio = document.getElementById('pm-bio');
+  const pmClose = document.getElementById('pm-close');
+
+  // create Add Friend button by cloning login button to keep same style
+  const addFriendBtn = loginBtn.cloneNode(true);
+  addFriendBtn.textContent = 'Adicionar amigo';
+  addFriendBtn.classList.add('add-friend-btn');
+  sideMenu.appendChild(addFriendBtn);
+
+  // helper: get current logged user (from localStorage)
+  function getLocalUser(){
+    try {
+      return JSON.parse(localStorage.getItem('user'));
+    } catch(e){ return null; }
+  }
+
+  // helper: update friends list UI
+  async function refreshFriendsUI(){
+    friendsListEl.innerHTML = '';
+    const local = getLocalUser();
+    if(!local || !local.name) return;
+    // fetch user doc from firestore to get canonical friends list
+    const uref = doc(db, 'users', local.name);
+    const snap = await getDoc(uref);
+    let friends = [];
+    if(snap.exists()){
+      const data = snap.data();
+      friends = data.friends || [];
+    } else {
+      // no doc yet — try localStorage fallback
+      friends = local.friends || [];
+    }
+    if(friends.length === 0) {
+      // keep area small and unobtrusive (no text)
+      return;
+    }
+    friends.forEach(name=>{
+      const btn = document.createElement('div');
+      btn.className = 'friend-item';
+      btn.textContent = name;
+      btn.addEventListener('click', ()=> openProfile(name));
+      friendsListEl.appendChild(btn);
+    });
+  }
+
+  // open profile modal for given username (reads firestore)
+  async function openProfile(username){
+    if(!username) return alert('Nome inválido');
+    const ref = doc(db, 'users', username);
+    const snap = await getDoc(ref);
+    if(!snap.exists()){
+      return alert('Perfil não encontrado no servidor.');
+    }
+    const data = snap.data();
+    pmName.textContent = data.name || username;
+    pmPic.src = data.pic || 'https://via.placeholder.com/80';
+    pmBio.textContent = data.bio || '';
+    profileModal.style.display = 'flex';
+  }
+
+  pmClose?.addEventListener('click', ()=> profileModal.style.display='none');
+  profileModal?.addEventListener('click', (e)=> { if(e.target === profileModal) profileModal.style.display='none'; });
+
+  // when user logs in (there is already a non-module listener saving localStorage),
+  // we also save to Firestore and refresh UI.
+  const loginSaveBtn = document.getElementById('login-save');
+  loginSaveBtn.addEventListener('click', async ()=>{
+    const input = document.getElementById('login-input');
+    const username = input.value.trim();
+    if(!username) return;
+    const uref = doc(db, 'users', username);
+    await setDoc(uref, { name: username, friends: [], bio: '', pic: '' }, { merge: true });
+    // update local storage user
+    localStorage.setItem('user', JSON.stringify({ name: username }));
+    // update side UI
+    profileNameEl.textContent = username;
+    // hide login btn (original script already hides it too)
+    loginBtn.style.display = 'none';
+    // refresh friends list
+    await refreshFriendsUI();
+  });
+
+  // add friend action (prompt, then verify + update Firestore)
+  addFriendBtn.addEventListener('click', async ()=>{
+    const local = getLocalUser();
+    if(!local || !local.name){
+      alert('Você precisa logar primeiro. Abra o menu e clique em Login.');
+      return;
+    }
+    const friendName = prompt('Digite o username do seu amigo (exato):');
+    if(!friendName) return;
+    // verify friend exists on server
+    const fref = doc(db, 'users', friendName);
+    const fsnap = await getDoc(fref);
+    if(!fsnap.exists()){
+      alert('Usuário não encontrado no servidor.');
+      return;
+    }
+    // update current user's friends using arrayUnion
+    const userRef = doc(db, 'users', local.name);
+    await updateDoc(userRef, { friends: arrayUnion(friendName) });
+    // update localStorage copy
+    let userLocal = getLocalUser() || {};
+    if(!userLocal.friends) userLocal.friends = [];
+    if(!userLocal.friends.includes(friendName)) userLocal.friends.push(friendName);
+    localStorage.setItem('user', JSON.stringify(userLocal));
+    alert(`${friendName} adicionado aos seus amigos!`);
+    await refreshFriendsUI();
+  });
+
+  // click on profile area => open own profile (reads firestore)
+  const menuProfile = document.getElementById('menu-profile');
+  menuProfile.addEventListener('click', async ()=>{
+    const local = getLocalUser();
+    if(!local || !local.name) {
+      // if not logged, open login modal
+      document.getElementById('login-modal').style.display = 'flex';
+      return;
+    }
+    openProfile(local.name);
+  });
+
+  // on load: if local user exists, set UI and refresh friends
+  (async ()=>{
+    const local = getLocalUser();
+    if(local && local.name){
+      profileNameEl.textContent = local.name;
+      loginBtn.style.display = 'none';
+      // try fetching user data to populate pic/bio/friends
+      const uref = doc(db,'users', local.name);
+      const snap = await getDoc(uref);
+      if(snap.exists()){
+        const data = snap.data();
+        if(data.pic) profilePicEl.src = data.pic;
+        if(data.bio) {
+          // store bio in local user as well
+          local.bio = data.bio;
+          localStorage.setItem('user', JSON.stringify(local));
+        }
+      }
+      await refreshFriendsUI();
+    }
+  })();
+
+</script>
+</body>
+  </html>
