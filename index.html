@@ -1,332 +1,260 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Project</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#0E0E11;color:#EDEDED;transition:.3s}
-body.light{background:#fff;color:#111}
-
-/* Navbar */
-nav{position:fixed;top:0;width:100%;height:60px;display:flex;align-items:center;padding:0 16px;z-index:1000;background:#0E0E11;transition:.3s}
-body.light nav{background:#fff;color:#111}
-nav h1{font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;color:inherit;transition:.3s;cursor:pointer; -webkit-tap-highlight-color: transparent; outline: none;}
-nav h1.clicked{transform:scale(0.95); transition: transform 0.1s ease;}
-
-/* Input busca */
-nav input{margin-left:16px;flex:1;max-width:220px;padding:6px 12px;border-radius:12px;border:1px solid #555;background:#1C1C1C;color:#EDEDED;transition:.3s}
-body.light nav input{background:#f2f2f2;color:#111;border:1px solid #ccc;}
-#search:focus{outline:none; box-shadow:none;}
-
-/* Engrenagem tema */
-#theme-gear{position:absolute;right:20px;font-size:1.5rem;cursor:pointer;top:50%;transform:translateY(-50%); -webkit-tap-highlight-color: transparent; outline:none;}
-#theme-menu{display:none;position:absolute;top:110%;right:0;background:#18181F;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.4);flex-direction:column;}
-#theme-menu button{padding:8px 12px;border:none;background:none;color:#fff;cursor:pointer;width:100%;text-align:left;}
-#theme-menu button:hover{background:#333;}
-body.light #theme-menu{background:#f2f2f2;color:#111;}
-body.light #theme-menu button:hover{background:#ddd;color:#111;}
-
-/* Main grid layout */
-main{padding-top:80px;padding-bottom:120px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
-
-/* Cards */
-.card{position:relative;border-radius:16px;overflow:hidden;background:#18181F;cursor:pointer;transition:.3s;}
-.card img{width:100%;display:block;border-radius:16px;object-fit:cover;height:220px;}
-
-/* Fade-in cards */
-.fade-in{animation:fadeIn .5s forwards}
-@keyframes fadeIn{to{opacity:1;transform:translateY(0)}}
-
-/* Sugestões autocomplete */
-.autocomplete-suggestions{position:absolute;background:#18181F;color:#fff;border-radius:12px;top:50px;left:16px;right:16px;max-height:200px;overflow-y:auto;z-index:10000;box-shadow:0 5px 15px rgba(0,0,0,.3)}
-body.light .autocomplete-suggestions{background:#f2f2f2;color:#111}
-.suggestion{padding:8px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.2s}
-.suggestion img{width:30px;height:30px;border-radius:6px;object-fit:cover}
-.suggestion:hover{background:#555;color:#fff}
-
-/* Tela detalhe imagem */
-#detail-page{display:none;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:0;background:#0E0E11;color:#EDEDED;min-height:100vh;}
-body.light #detail-page{background:#fff;color:#111}
-#detail-img{width:100%;max-height:80vh;object-fit:contain;margin-bottom:20px;display:block;margin-left:auto;margin-right:auto;}
-#detail-desc{max-width:90%;text-align:center;font-size:1rem;color:#ccc;margin-bottom:12px;}
-
-/* MENU LATERAL */
-#side-menu{position:fixed;top:0;right:-320px;width:320px;height:100%;background:#0B0B0C;color:#fff;box-shadow:-2px 0 24px rgba(0,0,0,0.6);z-index:1500;padding:22px;display:flex;flex-direction:column;gap:14px;transition:right 0.28s cubic-bezier(.2,.9,.2,1);overflow-y:auto;border-top-left-radius:14px;border-bottom-left-radius:14px;}
-#side-menu .close-menu{align-self:flex-end;font-size:1.6rem;background:none;border:none;color:#fff;cursor:pointer;transition:.2s}
-#side-menu .close-menu:hover{color:#999}
-#side-menu .profile{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:6px;}
-#side-menu .profile img{width:84px;height:84px;border-radius:50%;object-fit:cover;border:2px solid #222;background:#111;padding:2px;}
-#side-menu .profile h2{font-size:1.05rem;font-weight:700;color:#eee;margin-top:4px;}
-#side-menu .login-btn{padding:10px 16px;border-radius:12px;border:none;background:#222;color:#fff;font-weight:700;cursor:pointer;transition:.18s;width:100%;margin-top:6px;}
-#side-menu .login-btn:hover{background:#111}
-#side-menu.open{right:0}
-
-/* Friends area (minimal & harmonious) */
-.friends-section{margin-top:6px}
-.friends-section h4{font-size:.72rem;color:#9a9a9a;letter-spacing:1px;margin-bottom:8px}
-#friends-list{display:flex;flex-direction:column;gap:8px}
-.friend-card{
-  display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));cursor:pointer;
-  transition:background .15s;
-}
-.friend-card:hover{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02))}
-.friend-card img{width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid #222}
-.friend-name{font-size:.95rem;color:#e6e6e6}
-
-/* Requests list */
-#requests-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
-.request-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px;border-radius:10px;background:#0F0F10;border:1px solid #151515}
-.request-left{display:flex;align-items:center;gap:10px}
-.req-actions button{margin-left:6px;padding:6px 8px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
-.req-accept{background:#1f8a42;color:#fff}
-.req-decline{background:transparent;border:1px solid #333;color:#ddd}
-
-/* Profile modal (view profile) */
-#friend-profile-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;align-items:center;justify-content:center}
-#friend-profile-card{background:#080809;padding:20px;border-radius:14px;width:300px;text-align:center}
-#friend-profile-card img{width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid #222;margin-bottom:10px}
-#friend-profile-card h3{color:#fff;margin-bottom:6px}
-#friend-profile-card p{color:#bdbdbd;font-size:.95rem}
-
-/* small helpers */
-.small-muted{font-size:.82rem;color:#9a9a9a}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:#0E0E11;color:#EDEDED;transition:.18s}
+  body.light{background:#fff;color:#111}
+  nav{position:fixed;top:0;left:0;right:0;height:60px;display:flex;align-items:center;padding:0 16px;z-index:1200;background:#0E0E11}
+  body.light nav{background:#fff}
+  #open-menu{font-size:1.6rem;cursor:pointer;margin-right:12px;user-select:none}
+  nav h1{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;cursor:pointer;user-select:none}
+  nav input{margin-left:16px;flex:1;max-width:260px;padding:6px 12px;border-radius:12px;border:1px solid #555;background:#1C1C1C;color:#fff;outline:none}
+  body.light nav input{background:#f2f2f2;color:#111;border:1px solid #ccc}
+  #suggestions{position:absolute;top:60px;left:16px;right:16px;background:#18181F;border-radius:12px;overflow:hidden;display:none;z-index:1300}
+  .suggestion{display:flex;gap:10px;padding:8px;align-items:center;cursor:pointer}
+  .suggestion img{width:36px;height:36px;border-radius:6px;object-fit:cover}
+  .suggestion:hover{background:#222}
+  #theme-gear{position:absolute;right:20px;font-size:1.4rem;cursor:pointer}
+  #theme-menu{display:none;position:absolute;top:120%;right:0;background:#18181F;border-radius:10px;overflow:hidden;z-index:1300}
+  #theme-menu button{display:block;padding:8px 12px;border:none;background:none;color:#fff;width:160px;text-align:left;cursor:pointer}
+  main{padding-top:80px;padding-bottom:60px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:1100px;margin:0 auto}
+  .card{background:#18181F;border-radius:12px;overflow:hidden;cursor:pointer;height:220px;display:flex;align-items:center;justify-content:center}
+  .card img{width:100%;height:100%;object-fit:cover}
+  /* side menu */
+  #side-menu{position:fixed;top:0;right:-360px;width:360px;height:100%;background:#0B0B0C;color:#fff;box-shadow:-2px 0 24px rgba(0,0,0,.6);z-index:1400;padding:20px;display:flex;flex-direction:column;gap:12px;transition:right .28s cubic-bezier(.2,.9,.2,1);border-top-left-radius:14px;border-bottom-left-radius:14px}
+  #side-menu.open{right:0}
+  .close-menu{align-self:flex-end;font-size:1.6rem;background:none;border:none;color:#fff;cursor:pointer}
+  .profile{text-align:center}
+  .profile img{width:84px;height:84px;border-radius:50%;object-fit:cover;border:2px solid #222;padding:2px;background:#111}
+  .profile h2{font-size:1.05rem;font-weight:700;color:#eee;margin-top:6px}
+  .small-muted{font-size:.82rem;color:#9a9a9a}
+  .login-btn{padding:10px;border-radius:12px;border:none;background:#222;color:#fff;font-weight:700;cursor:pointer}
+  .friends-section h4{font-size:.72rem;color:#9a9a9a;letter-spacing:1px;margin-bottom:6px}
+  #friends-list{display:flex;flex-direction:column;gap:8px;max-height:30vh;overflow:auto;padding-right:6px}
+  .friend-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));cursor:pointer}
+  .friend-card img{width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid #222}
+  /* requests */
+  #requests-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .request-card{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:10px;background:#0F0F10;border:1px solid #151515}
+  .req-left{display:flex;gap:10px;align-items:center}
+  .req-actions button{margin-left:6px;padding:6px 8px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+  .req-accept{background:#1f8a42;color:#fff}
+  .req-decline{background:transparent;border:1px solid #333;color:#ddd}
+  /* profile modal */
+  #friend-profile-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1600;align-items:center;justify-content:center}
+  #friend-profile-card{background:#080809;padding:20px;border-radius:14px;width:320px;text-align:center}
+  #friend-profile-card img{width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid #222;margin-bottom:10px}
+  #detail-page{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1500;align-items:center;justify-content:center}
+  #detail-card{background:#0C0C0D;padding:20px;border-radius:12px;max-width:900px;width:92%;max-height:90vh;overflow:auto}
+  /* responsive */
+  @media(max-width:720px){
+    main{grid-template-columns:1fr}
+    #side-menu{width:92%}
+  }
 </style>
 </head>
 <body>
 
 <nav>
-<h1>Project</h1>
-<input type="text" id="search" placeholder="Buscar jogos...">
-<div id="theme-gear">⚙
-  <div id="theme-menu">
-    <button data-theme="light">Claro</button>
-    <button data-theme="dark">Escuro</button>
+  <div id="open-menu"></div>
+  <h1 id="home-title">Project</h1>
+  <input id="search" placeholder="Buscar jogos...">
+  <div id="theme-gear">
+    <div id="theme-menu">
+      <button data-theme="light">Claro</button>
+      <button data-theme="dark">Escuro</button>
+    </div>
   </div>
-</div>
-<div class="autocomplete-suggestions" id="suggestions"></div>
 </nav>
+
+<div id="suggestions" aria-live="polite"></div>
 
 <main id="main"></main>
 
-<!-- Tela de detalhe -->
+<!-- detail modal (when click card) -->
 <div id="detail-page">
-  <img id="detail-img" src="">
-  <p id="detail-desc"></p>
-</div>
-
-<!-- Modal login -->
-<div id="login-modal">
-  <div class="modal-content">
-    <h3>Digite seu nome</h3>
-    <input type="text" id="login-input" placeholder="Seu nome...">
-    <button id="login-save">Salvar</button>
+  <div id="detail-card">
+    <button id="detail-close" style="float:right;background:#111;color:#fff;border:none;padding:6px;border-radius:8px;cursor:pointer">Fechar</button>
+    <h2 id="detail-title" style="margin-top:6px"></h2>
+    <img id="detail-img" src="" style="width:100%;max-height:60vh;object-fit:contain;border-radius:8px;margin-top:12px">
+    <p id="detail-desc" style="color:#bdbdbd;margin-top:10px"></p>
   </div>
 </div>
 
-<!-- Friend profile modal -->
+<!-- friend profile modal -->
 <div id="friend-profile-modal">
   <div id="friend-profile-card">
     <img id="fp-avatar" src="https://via.placeholder.com/90" alt="avatar">
     <h3 id="fp-name">Nome</h3>
     <p id="fp-bio" class="small-muted">Bio</p>
     <div style="margin-top:12px">
-      <button id="fp-close" style="padding:8px 12px;border-radius:10px;border:none;background:#222;color:#fff;cursor:pointer">Fechar</button>
+      <button id="fp-close" class="login-btn">Fechar</button>
     </div>
   </div>
 </div>
 
-<!-- Menu lateral -->
-<div id="side-menu">
+<!-- login modal -->
+<div id="login-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1600;align-items:center;justify-content:center">
+  <div style="background:#080809;padding:18px;border-radius:12px;width:320px">
+    <h3 style="color:#fff;margin-bottom:8px">Digite seu nome</h3>
+    <input id="login-input" placeholder="Seu username" style="width:100%;padding:10px;border-radius:8px;border:1px solid #222;background:#0b0b0b;color:#fff;margin-bottom:8px">
+    <div style="display:flex;gap:8px">
+      <button id="login-save" class="login-btn" style="flex:1">Salvar</button>
+      <button id="login-cancel" class="login-btn" style="flex:1;background:#333">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- side menu -->
+<div id="side-menu" aria-hidden="true">
   <button class="close-menu">&times;</button>
   <div class="profile">
-    <img id="profile-pic" src="https://via.placeholder.com/80" alt="Foto de perfil">
+    <img id="profile-pic" src="https://via.placeholder.com/80" alt="avatar">
     <h2 id="profile-name">Convidado</h2>
-    <div class="small-muted" id="profile-bio-mini" style="margin-top:6px;color:#999;font-size:.82rem">Sem bio</div>
+    <div id="profile-bio" class="small-muted">Sem bio</div>
   </div>
 
-  <div class="friends-section" id="friends-section">
+  <button id="menu-login-btn" class="login-btn">Login</button>
+
+  <div class="friends-section">
     <h4>AMIGOS</h4>
-    <div id="friends-list"></div>
+    <div id="friends-list"><div class="small-muted">Nenhum amigo ainda</div></div>
 
     <div style="display:flex;gap:8px;margin-top:10px">
-      <button id="open-add-friend" class="login-btn" style="flex:1">Adicionar amigo</button>
-      <button id="open-requests" class="login-btn" style="flex:1;background:#151515">Solicitações</button>
+      <button id="add-friend-btn" class="login-btn" style="flex:1">Adicionar</button>
+      <button id="open-requests-btn" class="login-btn" style="flex:1;background:#151515">Solicitações</button>
     </div>
 
     <div id="requests-list" style="margin-top:12px;display:none"></div>
   </div>
-
-  <button class="login-btn" id="menu-login-btn">Login</button>
 </div>
 
 <script>
-const API_KEY='bfd4ae3a6ba14d47a3c627bad684acd8';
-const themeGear=document.getElementById('theme-gear');
-const themeMenu=document.getElementById('theme-menu');
-const searchInput=document.getElementById('search');
-const suggestionsDiv=document.getElementById('suggestions');
-const main=document.getElementById('main');
-const detailPage=document.getElementById('detail-page');
-const detailImg=document.getElementById('detail-img');
-const sideMenu=document.getElementById('side-menu');
-const closeMenuBtn=sideMenu.querySelector('.close-menu');
-const profileName=document.getElementById('profile-name');
-const profilePic=document.getElementById('profile-pic');
-const profileBioMini=document.getElementById('profile-bio-mini');
-const loginModal=document.getElementById('login-modal');
-const loginInput=document.getElementById('login-input');
-const loginSave=document.getElementById('login-save');
-const menuLoginBtn=document.getElementById('menu-login-btn');
+/* ---------- UI glue ---------- */
+const openMenu = document.getElementById('open-menu');
+const sideMenu = document.getElementById('side-menu');
+const closeMenu = sideMenu.querySelector('.close-menu');
+const themeGear = document.getElementById('theme-gear');
+const themeMenu = document.getElementById('theme-menu');
+const searchInput = document.getElementById('search');
+const suggestionsDiv = document.getElementById('suggestions');
+const mainGrid = document.getElementById('main');
+const menuLoginBtn = document.getElementById('menu-login-btn');
+const loginModal = document.getElementById('login-modal');
+const loginCancel = document.getElementById('login-cancel');
+const loginSave = document.getElementById('login-save');
+const addFriendBtn = document.getElementById('add-friend-btn');
+const openRequestsBtn = document.getElementById('open-requests-btn');
+const requestsListEl = document.getElementById('requests-list');
+const friendsListEl = document.getElementById('friends-list');
+const profileNameEl = document.getElementById('profile-name');
+const profilePicEl = document.getElementById('profile-pic');
+const profileBioEl = document.getElementById('profile-bio');
+const friendProfileModal = document.getElementById('friend-profile-modal');
+const fpAvatar = document.getElementById('fp-avatar');
+const fpName = document.getElementById('fp-name');
+const fpBio = document.getElementById('fp-bio');
+const fpClose = document.getElementById('fp-close');
+const detailPage = document.getElementById('detail-page');
+const detailClose = document.getElementById('detail-close');
+const detailTitle = document.getElementById('detail-title');
+const detailImg = document.getElementById('detail-img');
+const detailDesc = document.getElementById('detail-desc');
 
-const friendsListEl=document.getElementById('friends-list');
-const openAddFriendBtn=document.getElementById('open-add-friend');
-const openRequestsBtn=document.getElementById('open-requests');
-const requestsListEl=document.getElementById('requests-list');
+openMenu.onclick = () => { sideMenu.classList.add('open'); sideMenu.setAttribute('aria-hidden','false'); }
+closeMenu.onclick = () => { sideMenu.classList.remove('open'); sideMenu.setAttribute('aria-hidden','true'); }
+themeGear.onclick = () => { themeMenu.style.display = themeMenu.style.display === 'block' ? 'none' : 'block'; }
+themeMenu.querySelectorAll('button').forEach(b => b.addEventListener('click', ()=> {
+  document.body.classList.toggle('light', b.dataset.theme === 'light');
+  themeMenu.style.display = 'none';
+}));
 
-const friendProfileModal=document.getElementById('friend-profile-modal');
-const fpAvatar=document.getElementById('fp-avatar');
-const fpName=document.getElementById('fp-name');
-const fpBio=document.getElementById('fp-bio');
-const fpClose=document.getElementById('fp-close');
+menuLoginBtn.onclick = ()=> { loginModal.style.display = 'flex'; }
+loginCancel.onclick = ()=> { loginModal.style.display = 'none'; }
+fpClose.onclick = ()=> { friendProfileModal.style.display = 'none'; }
+friendProfileModal.addEventListener('click', e => { if(e.target === friendProfileModal) friendProfileModal.style.display = 'none' });
+detailClose.onclick = ()=> detailPage.style.display = 'none';
 
-/* ================== Tema engrenagem ================== */
-themeGear.addEventListener('click',()=>{
-  themeMenu.style.display=themeMenu.style.display==='flex'?'none':'flex';
-  themeMenu.style.flexDirection='column';
+/* close suggestions when clicking outside */
+document.addEventListener('click', (e)=>{
+  if(!suggestionsDiv.contains(e.target) && e.target !== searchInput) suggestionsDiv.style.display = 'none';
 });
-themeMenu.querySelectorAll('button').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    if(btn.dataset.theme==='light') document.body.classList.add('light');
-    else document.body.classList.remove('light');
-    themeMenu.style.display='none';
-  });
-});
-
-/* ================== Swipe menu direita -> esquerda mobile ================== */
-let startX=0;
-let isDragging=false;
-document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
-document.addEventListener('touchmove', e => {
-  const currentX = e.touches[0].clientX;
-  if (!sideMenu.classList.contains('open') && startX > 0 && startX - currentX > 50) {
-    sideMenu.classList.add('open');
-    isDragging = true;
-  }
-});
-document.addEventListener('touchend', () => { isDragging=false; });
-closeMenuBtn.addEventListener('click',()=>{sideMenu.classList.remove('open');});
-
-/* ================== Login imersivo minimalista (UI) ================== */
-menuLoginBtn.addEventListener('click',()=>{ loginModal.style.display='flex'; });
-loginSave.addEventListener('click',()=>{
-  const username=loginInput.value.trim();
-  if(username){
-    profileName.textContent=username;
-    profileBioMini.textContent='Carregando...';
-    loginModal.style.display='none';
-    menuLoginBtn.style.display='none';
-    // Firestore actions handled in module script below
-    // set currentUser in module via listener bound there
-  }
-});
-loginModal.addEventListener('click',e=>{if(e.target===loginModal) loginModal.style.display='none';});
-
-/* toggle requests view */
-openRequestsBtn.addEventListener('click',()=>{
-  requestsListEl.style.display = requestsListEl.style.display === 'none' ? 'block' : 'none';
-});
-
-/* add friend prompt (UI only; module handles firestore) */
-openAddFriendBtn.addEventListener('click', async ()=>{
-  const name = prompt('Digite o username exato do amigo:');
-  if(!name) return;
-  // module script will handle; we dispatch custom event with detail
-  window.dispatchEvent(new CustomEvent('app:addFriendRequest',{detail:{to:name}}));
-});
-
-/* ================== Render jogos e autocomplete ================== */
-let currentImage=null;
-let knownGames=[];
-function debounce(func,delay){let timer; return function(...args){clearTimeout(timer);timer=setTimeout(()=>func.apply(this,args),delay);}}
-
-async function fetchGames(query){
-  const res=await fetch(`https://api.rawg.io/api/games?key=${API_KEY}&search=${encodeURIComponent(query)}&page_size=10`);
-  const data=await res.json();
-  return data.results||[];
-}
-
-searchInput.addEventListener('input',debounce(async ()=>{
-  suggestionsDiv.innerHTML='';
-  const val=searchInput.value.trim();
-  if(!val) return;
-  const games=await fetchGames(val);
-  games.forEach(g=>{
-    const div=document.createElement('div');
-    div.className='suggestion';
-    const img=document.createElement('img');
-    img.src=g.background_image||'https://via.placeholder.com/30';
-    const span=document.createElement('span');
-    span.textContent=g.name;
-    div.appendChild(img); div.appendChild(span);
-    div.addEventListener('click',()=>{
-      searchInput.value=g.name;
-      suggestionsDiv.innerHTML='';
-      renderGames([{
-        name:g.name,
-        desc:g.released||'',
-        img:g.background_image||'https://via.placeholder.com/250'
-      }]);
-    });
-    suggestionsDiv.appendChild(div);
-  });
-},300));
-
-function renderGames(custom=[]){
-  main.innerHTML='';
-  let games=custom.length?custom:JSON.parse(localStorage.getItem('games'))||[];
-  const query=searchInput.value.toLowerCase().trim();
-  if(query) games=games.filter(g=>g.name.toLowerCase().includes(query));
-  games.forEach(g=>{
-    const card=document.createElement('div'); card.className='card';
-    const img=document.createElement('img'); img.src=g.img||'https://via.placeholder.com/250';
-    card.appendChild(img);
-    card.onclick=()=>{
-      detailPage.style.display='flex';
-      main.style.display='none';
-      detailImg.src=g.img;
-      detailImg.style.width='100%';
-      detailImg.style.maxHeight='80vh';
-      detailImg.style.objectFit='contain';
-      detailImg.style.display='block';
-      detailImg.style.margin='0 auto';
-    };
-    main.appendChild(card);
-    card.classList.add('fade-in');
-  });
-}
-
-/* ================== Voltar ao clicar em Project ================== */
-document.querySelector('nav h1').addEventListener('click',()=>{
-  const projectTitle=document.querySelector('nav h1');
-  projectTitle.classList.add('clicked');
-  setTimeout(()=>projectTitle.classList.remove('clicked'),150);
-  detailPage.style.display='none';
-  main.style.display='grid';
-  searchInput.value='';
-  renderGames([]);
-});
-
-renderGames();
-
-/* friend profile modal close */
-fpClose.addEventListener('click',()=>friendProfileModal.style.display='none');
-friendProfileModal.addEventListener('click',(e)=>{ if(e.target===friendProfileModal) friendProfileModal.style.display='none' });
 </script>
 
-<!-- FIREBASE MODULE: friends, requests, real-time -->
+<!-- RAWG + card rendering (UI-only; uses API) -->
+<script>
+const RAWG_KEY = 'bfd4ae3a6ba14d47a3c627bad684acd8'; // your key
+let lastResults = [];
+
+async function fetchGames(q){
+  try{
+    const res = await fetch(`https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${encodeURIComponent(q)}&page_size=12`);
+    const json = await res.json();
+    return json.results || [];
+  }catch(e){
+    console.error('RAWG error', e);
+    return [];
+  }
+}
+
+let debounceTimer = null;
+searchInput.addEventListener('input', ()=>{
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(async ()=>{
+    const q = searchInput.value.trim();
+    suggestionsDiv.innerHTML = '';
+    if(!q){ suggestionsDiv.style.display='none'; return; }
+    const games = await fetchGames(q);
+    lastResults = games;
+    if(games.length === 0){ suggestionsDiv.style.display='none'; return; }
+    games.slice(0,8).forEach(g=>{
+      const div = document.createElement('div');
+      div.className = 'suggestion';
+      const img = document.createElement('img');
+      img.src = g.background_image || 'https://via.placeholder.com/60';
+      const span = document.createElement('span');
+      span.textContent = g.name;
+      div.appendChild(img);
+      div.appendChild(span);
+      div.onclick = ()=> {
+        renderGames([g]);
+        suggestionsDiv.style.display = 'none';
+      };
+      suggestionsDiv.appendChild(div);
+    });
+    suggestionsDiv.style.display = 'block';
+  }, 260);
+});
+
+/* render initial (if any saved games) */
+function renderGames(list){
+  mainGrid.innerHTML = '';
+  list.forEach(g=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    const img = document.createElement('img');
+    img.src = g.background_image || 'https://via.placeholder.com/400x220';
+    card.appendChild(img);
+    card.onclick = ()=> {
+      detailTitle.textContent = g.name;
+      detailImg.src = g.background_image || '';
+      detailDesc.textContent = `Lançamento: ${g.released || '—'}\nNotas: ${g.rating || '—'}`;
+      detailPage.style.display = 'flex';
+    };
+    mainGrid.appendChild(card);
+  });
+}
+
+/* initial empty */
+renderGames([]);
+</script>
+
+<!-- FIREBASE MODULE: friends, requests, realtime -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-app.js";
 import {
@@ -334,7 +262,7 @@ import {
   collection, addDoc, query, where, getDocs, onSnapshot, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
 
-/* Use your Firebase config (you sent earlier) */
+/* Your firebase config (as provided) */
 const firebaseConfig = {
   apiKey: "AIzaSyCDsIWhMHMRePqWHPVgaTWaEIVfWNVeMQo",
   authDomain: "project-6787c.firebaseapp.com",
@@ -348,31 +276,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let currentUser = null; // username string
+let currentUser = null; // string username
 
-// Elements
-const profileNameEl = document.getElementById('profile-name');
-const profilePicEl = document.getElementById('profile-pic');
-const profileBioMini = document.getElementById('profile-bio-mini');
-const menuLoginBtn = document.getElementById('menu-login-btn');
-
-const friendsListEl = document.getElementById('friends-list');
-const requestsListEl = document.getElementById('requests-list');
-
-const friendProfileModal = document.getElementById('friend-profile-modal');
-const fpAvatar = document.getElementById('fp-avatar');
-const fpNameEl = document.getElementById('fp-name');
-const fpBioEl = document.getElementById('fp-bio');
-
-// helper: show friend profile in modal
-function showFriendProfile(data){
-  fpAvatar.src = data.avatar || 'https://via.placeholder.com/90';
-  fpNameEl.textContent = data.name || '—';
-  fpBioEl.textContent = data.bio || 'Sem bio';
-  friendProfileModal.style.display = 'flex';
-}
-
-// get user doc snapshot
+// helper: get user doc or null
 async function getUserDoc(username){
   if(!username) return null;
   const ref = doc(db, 'users', username);
@@ -380,92 +286,234 @@ async function getUserDoc(username){
   return snap.exists() ? snap : null;
 }
 
-// create user doc when login pressed
-// Listen for the loginSave click event (UI script sets UI and triggers this)
-const loginSaveBtn = document.getElementById('login-save');
-loginSaveBtn.addEventListener('click', async ()=> {
-  const username = document.getElementById('login-input').value.trim();
-  if(!username) return;
-  currentUser = username;
-  // create or ensure doc exists
-  const userRef = doc(db, 'users', username);
-  await setDoc(userRef, {
-    name: username,
-    bio: '',
-    avatar: 'https://via.placeholder.com/90',
-    friends: []
-  }, { merge: true });
-  // update UI
-  profileNameEl.textContent = username;
-  profileBioMini.textContent = 'Sem bio';
-  menuLoginBtn.style.display = 'none';
-  // start watchers
-  attachRealtimeListeners();
-  // initial load
-  loadFriends();
-  loadIncomingRequests();
+// create user if not exists
+async function ensureUser(username){
+  const ref = doc(db, 'users', username);
+  const snap = await getDoc(ref);
+  if(!snap.exists()){
+    await setDoc(ref, {
+      name: username,
+      bio: '',
+      avatar: 'https://via.placeholder.com/90',
+      friends: []
+    }, { merge: true });
+    return await getDoc(ref);
+  }
+  return snap;
+}
+
+/* LOGIN flow */
+const loginInputEl = document.getElementById('login-input');
+const loginModalEl = document.getElementById('login-modal');
+loginSave.addEventListener('click', async ()=>{
+  const username = (loginInputEl.value || '').trim();
+  if(!username){ alert('Digite um nome'); return; }
+  try{
+    await ensureUser(username);
+    currentUser = username;
+    // update side UI
+    document.getElementById('profile-name').textContent = username;
+    const userSnap = await getUserDoc(username);
+    const data = userSnap.data();
+    if(data.avatar) profilePicEl.src = data.avatar;
+    profileBioEl.textContent = data.bio || 'Sem bio';
+    menuLoginBtn.style.display = 'none';
+    loginModalEl.style.display = 'none';
+    // start real-time listeners
+    attachRealtimeListeners();
+    loadFriendsOnce();
+    loadIncomingRequestsOnce();
+  }catch(err){
+    console.error(err);
+    alert('Erro no login (ver console)');
+  }
 });
 
-// attach realtime listener for this user's doc (bio/avatar changes)
+/* attach realtime watchers */
 let userUnsub = null;
+let requestsUnsub = null;
+
 function attachRealtimeListeners(){
   if(!currentUser) return;
   const uref = doc(db, 'users', currentUser);
-  if(userUnsub) userUnsub(); // remove old
-  userUnsub = onSnapshot(uref, (snap)=>{
+  if(userUnsub) userUnsub();
+  userUnsub = onSnapshot(uref, snap=>{
     if(!snap.exists()) return;
     const data = snap.data();
     profileNameEl.textContent = data.name || currentUser;
     if(data.avatar) profilePicEl.src = data.avatar;
-    profileBioMini.textContent = data.bio || 'Sem bio';
-    // refresh lists
+    profileBioEl.textContent = data.bio || 'Sem bio';
+    // render friends from doc
     renderFriends(data.friends || []);
   });
-  // realtime requests watcher handled separately
+  // watch incoming requests realtime
   watchIncomingRequestsRealtime();
 }
 
-/* FRIENDS: load & render */
-async function loadFriends(){
+/* render friends */
+async function loadFriendsOnce(){
   if(!currentUser) return;
   const uref = doc(db, 'users', currentUser);
   const snap = await getDoc(uref);
   if(!snap.exists()) return;
-  const data = snap.data();
-  renderFriends(data.friends || []);
+  renderFriends(snap.data().friends || []);
 }
 
-function clearChildren(el){while(el.firstChild) el.removeChild(el.firstChild);}
-
-function renderFriends(friends){
-  clearChildren(friendsListEl);
-  if(!friends || friends.length===0){
-    const none = document.createElement('div'); none.className='small-muted'; none.textContent='Nenhum amigo ainda';
-    friendsListEl.appendChild(none);
+async function renderFriends(friends){
+  friendsListEl.innerHTML = '';
+  if(!friends || friends.length === 0){
+    friendsListEl.innerHTML = '<div class="small-muted">Nenhum amigo ainda</div>';
     return;
   }
-  friends.forEach(async (fname)=>{
-    const fsnap = await getUserDoc(fname);
-    if(!fsnap) return;
-    const f = fsnap.data();
-    const card = document.createElement('div');
-    card.className = 'friend-card';
-    card.innerHTML = `<img src="${f.avatar||'https://via.placeholder.com/90'}"><div class="friend-name">${f.name}</div>`;
-    card.addEventListener('click', ()=> showFriendProfile(f));
-    friendsListEl.appendChild(card);
+  for(const name of friends){
+    try{
+      const fsnap = await getUserDoc(name);
+      const fdata = fsnap ? fsnap.data() : { name, avatar: 'https://via.placeholder.com/80' };
+      const div = document.createElement('div');
+      div.className = 'friend-card';
+      div.innerHTML = `<img src="${fdata.avatar}"><div style="font-weight:700">${fdata.name}</div>`;
+      div.onclick = ()=> showFriendProfile(fdata);
+      friendsListEl.appendChild(div);
+    }catch(e){
+      console.error('renderFriends error', e);
+    }
+  }
+}
+
+/* show friend profile modal */
+function showFriendProfile(data){
+  fpAvatar.src = data.avatar || 'https://via.placeholder.com/90';
+  fpName.textContent = data.name || '—';
+  fpBio.textContent = data.bio || 'Sem bio';
+  friendProfileModal.style.display = 'flex';
+}
+
+/* SEND friend request */
+addFriendBtn.addEventListener('click', async ()=>{
+  const to = prompt('Digite o username exato do amigo:');
+  if(!to) return;
+  if(!currentUser) return alert('Faça login antes');
+  if(to === currentUser) return alert('Você não pode adicionar você mesmo.');
+  try{
+    // recipient exists?
+    const recSnap = await getUserDoc(to);
+    if(!recSnap) return alert('Usuário não encontrado.');
+    // already friends?
+    const mySnap = await getUserDoc(currentUser);
+    const myData = mySnap ? mySnap.data() : {};
+    if((myData.friends||[]).includes(to)) return alert('Já é seu amigo.');
+    // existing pending requests from you to them?
+    const q = query(collection(db,'friendRequests'), where('from','==',currentUser), where('to','==',to), where('status','==','pending'));
+    const qs = await getDocs(q);
+    if(!qs.empty) return alert('Pedido já enviado.');
+    // create
+    await addDoc(collection(db,'friendRequests'), {
+      from: currentUser,
+      to,
+      status: 'pending',
+      createdAt: serverTimestamp()
+    });
+    alert('Pedido enviado!');
+  }catch(err){
+    console.error(err);
+    alert('Erro ao enviar pedido');
+  }
+});
+
+/* LOAD incoming requests once */
+async function loadIncomingRequestsOnce(){
+  if(!currentUser) return;
+  const q = query(collection(db,'friendRequests'), where('to','==',currentUser), where('status','==','pending'));
+  const snap = await getDocs(q);
+  renderRequests(snap.docs.map(d=>({ id:d.id, ...d.data() })));
+}
+
+/* watch incoming requests realtime */
+function watchIncomingRequestsRealtime(){
+  if(!currentUser) return;
+  if(requestsUnsub) requestsUnsub();
+  const q = query(collection(db,'friendRequests'), where('to','==',currentUser), where('status','==','pending'));
+  requestsUnsub = onSnapshot(q, snapshot=>{
+    const arr = snapshot.docs.map(d=>({ id:d.id, ...d.data() }));
+    renderRequests(arr);
   });
 }
 
-/* REQUESTS: send, load, accept, decline */
+/* render requests list */
+function clearChildren(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+async function renderRequests(list){
+  clearChildren(requestsListEl);
+  if(!list || list.length === 0){
+    requestsListEl.innerHTML = '<div class="small-muted">Nenhuma solicitação</div>'; 
+    return;
+  }
+  for(const req of list){
+    const from = req.from;
+    const fsnap = await getUserDoc(from);
+    const fdata = fsnap ? fsnap.data() : { name: from, avatar: 'https://via.placeholder.com/90' };
+    const card = document.createElement('div');
+    card.className = 'request-card';
+    card.innerHTML = `
+      <div class="req-left">
+        <img src="${fdata.avatar}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:1px solid #111">
+        <div>
+          <div style="font-weight:700">${fdata.name}</div>
+          <div style="font-size:.82rem;color:#9b9b9b">pediu amizade</div>
+        </div>
+      </div>
+      <div class="req-actions">
+        <button class="req-accept">Aceitar</button>
+        <button class="req-decline">Recusar</button>
+      </div>
+    `;
+    // accept
+    card.querySelector('.req-accept').addEventListener('click', async ()=>{
+      try{
+        // add each other
+        await updateDoc(doc(db,'users',currentUser), { friends: arrayUnion(from) });
+        await updateDoc(doc(db,'users',from), { friends: arrayUnion(currentUser) });
+        // remove request doc
+        await deleteDoc(doc(db,'friendRequests', req.id));
+      }catch(err){
+        console.error(err);
+        alert('Erro ao aceitar');
+      }
+    });
+    // decline
+    card.querySelector('.req-decline').addEventListener('click', async ()=>{
+      try{
+        await deleteDoc(doc(db,'friendRequests', req.id));
+      }catch(err){
+        console.error(err);
+        alert('Erro ao recusar');
+      }
+    });
+    requestsListEl.appendChild(card);
+  }
+}
 
-// send request -> create doc in 'friendRequests' collection if not exists
-window.addEventListener('app:addFriendRequest', async (e)=>{
-  const to = e.detail?.to;
-  if(!to) return alert('Nome inválido');
-  if(!currentUser) return alert('Faça login antes de enviar pedidos');
-  if(to === currentUser) return alert('Você não pode adicionar você mesmo.');
-  // check recipient exists
-  const treq = await getUserDoc(to);
-  if(!treq) return alert('Usuário não encontrado.');
-  // check if already friends
-  const meSnap = await getUserDoc(curren
+/* toggle requests view */
+openRequestsBtn.addEventListener('click', ()=> {
+  requestsListEl.style.display = requestsListEl.style.display === 'none' ? 'block' : 'none';
+});
+
+/* try to detect if UI had username already set (rare case) */
+(async ()=>{
+  try{
+    const displayed = document.getElementById('profile-name').textContent;
+    if(displayed && displayed !== 'Convidado'){
+      const snap = await getUserDoc(displayed);
+      if(snap){
+        currentUser = displayed;
+        attachRealtimeListeners();
+        loadFriendsOnce();
+        loadIncomingRequestsOnce();
+        menuLoginBtn.style.display = 'none';
+      }
+    }
+  }catch(e){/* ignore */}
+})();
+</script>
+
+</body>
+</html>
