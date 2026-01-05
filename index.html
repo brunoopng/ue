@@ -6,263 +6,327 @@
 <title>Project</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Inter',sans-serif;background:#0E0E11;color:#EDEDED;transition:.18s}
-  body.light{background:#fff;color:#111}
-  nav{position:fixed;top:0;left:0;right:0;height:60px;display:flex;align-items:center;padding:0 16px;z-index:1200;background:#0E0E11}
-  body.light nav{background:#fff}
-  #open-menu{font-size:1.6rem;cursor:pointer;margin-right:12px;user-select:none}
-  nav h1{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;cursor:pointer;user-select:none}
-  nav input{margin-left:16px;flex:1;max-width:260px;padding:6px 12px;border-radius:12px;border:1px solid #555;background:#1C1C1C;color:#fff;outline:none}
-  body.light nav input{background:#f2f2f2;color:#111;border:1px solid #ccc}
-  #suggestions{position:absolute;top:60px;left:16px;right:16px;background:#18181F;border-radius:12px;overflow:hidden;display:none;z-index:1300}
-  .suggestion{display:flex;gap:10px;padding:8px;align-items:center;cursor:pointer}
-  .suggestion img{width:36px;height:36px;border-radius:6px;object-fit:cover}
-  .suggestion:hover{background:#222}
-  #theme-gear{position:absolute;right:20px;font-size:1.4rem;cursor:pointer}
-  #theme-menu{display:none;position:absolute;top:120%;right:0;background:#18181F;border-radius:10px;overflow:hidden;z-index:1300}
-  #theme-menu button{display:block;padding:8px 12px;border:none;background:none;color:#fff;width:160px;text-align:left;cursor:pointer}
-  main{padding-top:80px;padding-bottom:60px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:1100px;margin:0 auto}
-  .card{background:#18181F;border-radius:12px;overflow:hidden;cursor:pointer;height:220px;display:flex;align-items:center;justify-content:center}
-  .card img{width:100%;height:100%;object-fit:cover}
-  /* side menu */
-  #side-menu{position:fixed;top:0;right:-360px;width:360px;height:100%;background:#0B0B0C;color:#fff;box-shadow:-2px 0 24px rgba(0,0,0,.6);z-index:1400;padding:20px;display:flex;flex-direction:column;gap:12px;transition:right .28s cubic-bezier(.2,.9,.2,1);border-top-left-radius:14px;border-bottom-left-radius:14px}
-  #side-menu.open{right:0}
-  .close-menu{align-self:flex-end;font-size:1.6rem;background:none;border:none;color:#fff;cursor:pointer}
-  .profile{text-align:center}
-  .profile img{width:84px;height:84px;border-radius:50%;object-fit:cover;border:2px solid #222;padding:2px;background:#111}
-  .profile h2{font-size:1.05rem;font-weight:700;color:#eee;margin-top:6px}
-  .small-muted{font-size:.82rem;color:#9a9a9a}
-  .login-btn{padding:10px;border-radius:12px;border:none;background:#222;color:#fff;font-weight:700;cursor:pointer}
-  .friends-section h4{font-size:.72rem;color:#9a9a9a;letter-spacing:1px;margin-bottom:6px}
-  #friends-list{display:flex;flex-direction:column;gap:8px;max-height:30vh;overflow:auto;padding-right:6px}
-  .friend-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));cursor:pointer}
-  .friend-card img{width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid #222}
-  /* requests */
-  #requests-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-  .request-card{display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:10px;background:#0F0F10;border:1px solid #151515}
-  .req-left{display:flex;gap:10px;align-items:center}
-  .req-actions button{margin-left:6px;padding:6px 8px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
-  .req-accept{background:#1f8a42;color:#fff}
-  .req-decline{background:transparent;border:1px solid #333;color:#ddd}
-  /* profile modal */
-  #friend-profile-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1600;align-items:center;justify-content:center}
-  #friend-profile-card{background:#080809;padding:20px;border-radius:14px;width:320px;text-align:center}
-  #friend-profile-card img{width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid #222;margin-bottom:10px}
-  #detail-page{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1500;align-items:center;justify-content:center}
-  #detail-card{background:#0C0C0D;padding:20px;border-radius:12px;max-width:900px;width:92%;max-height:90vh;overflow:auto}
-  /* responsive */
-  @media(max-width:720px){
-    main{grid-template-columns:1fr}
-    #side-menu{width:92%}
-  }
+/* ---------- visual (mantive o estilo minimal/preto e branco) ---------- */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0E0E11;color:#EDEDED;transition:.2s}
+body.light{background:#fff;color:#111}
+
+/* NAV */
+nav{
+  position:fixed;top:0;width:100%;height:60px;display:flex;align-items:center;
+  padding:0 16px;z-index:1000;background:#0E0E11;
+}
+body.light nav{background:#fff}
+#open-menu{font-size:1.6rem;cursor:pointer;margin-right:12px;user-select:none}
+nav h1{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;cursor:pointer;margin-right:12px}
+nav input{
+  margin-left:6px;flex:1;max-width:320px;padding:8px 12px;border-radius:12px;
+  border:1px solid #555;background:#1C1C1C;color:#fff;outline:none;
+}
+body.light nav input{background:#f2f2f2;color:#111;border:1px solid #ccc}
+nav input::placeholder{color:#999}
+
+/* GEAR */
+#theme-gear{position:absolute;right:20px;font-size:1.4rem;cursor:pointer;user-select:none}
+#theme-menu{display:none;position:absolute;top:120%;right:0;background:#18181F;border-radius:10px;overflow:hidden}
+#theme-menu button{padding:8px 12px;background:none;border:none;color:#fff;width:100%;text-align:left;cursor:pointer}
+body.light #theme-menu button{color:#111}
+
+/* MAIN */
+main{padding-top:80px;padding-bottom:60px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px;padding-left:16px;padding-right:16px}
+
+/* CARDS */
+.card{position:relative;border-radius:12px;overflow:hidden;background:#18181F;cursor:pointer;transition:.2s;padding:0}
+.card img{width:100%;height:220px;object-fit:cover;display:block;border-radius:12px}
+
+/* SIDE MENU */
+#side-menu{
+  position:fixed;top:0;right:-360px;width:360px;height:100%;background:#0B0B0C;color:#fff;
+  box-shadow:-2px 0 24px rgba(0,0,0,.6);z-index:1500;padding:22px;display:flex;flex-direction:column;gap:12px;transition:right .28s cubic-bezier(.2,.9,.2,1);
+  border-top-left-radius:14px;border-bottom-left-radius:14px;
+}
+#side-menu.open{right:0}
+.close-menu{align-self:flex-end;font-size:1.6rem;background:none;border:none;color:#fff;cursor:pointer}
+.profile{text-align:center}
+.profile img{width:88px;height:88px;border-radius:50%;object-fit:cover;border:2px solid #222;background:#111;padding:2px}
+.profile h2{font-size:1.05rem;font-weight:700;margin-top:8px}
+.small-muted{font-size:.82rem;color:#9a9a9a}
+
+/* Friends */
+.friends-section h4{font-size:.72rem;color:#9a9a9a;letter-spacing:1px;margin-bottom:8px}
+#friends-list{display:flex;flex-direction:column;gap:8px}
+.friend-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));cursor:pointer}
+.friend-card img{width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid #222}
+.friend-name{font-size:.95rem;color:#e6e6e6}
+
+/* Requests */
+#requests-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.request-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px;border-radius:10px;background:#0F0F10;border:1px solid #151515}
+.req-left{display:flex;align-items:center;gap:10px}
+.req-actions button{margin-left:6px;padding:6px 8px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+.req-accept{background:#1f8a42;color:#fff}
+.req-decline{background:transparent;border:1px solid #333;color:#ddd}
+
+/* MODALS */
+#login-modal,#friend-profile-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;align-items:center;justify-content:center}
+.modal-content{background:#080809;padding:18px;border-radius:12px;color:#fff;width:320px}
+.modal-content input{width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#0b0b0c;color:#fff;margin-bottom:10px}
+.modal-content button{padding:10px;border-radius:10px;border:none;background:#222;color:#fff;cursor:pointer;width:100%}
+
+/* small responsive */
+@media (max-width:720px){
+  main{grid-template-columns:1fr}
+  #side-menu{width:92%}
+}
 </style>
 </head>
 <body>
 
 <nav>
-  <div id="open-menu"></div>
-  <h1 id="home-title">Project</h1>
-  <input id="search" placeholder="Buscar jogos...">
-  <div id="theme-gear">
+  <div id="open-menu" title="Abrir menu"></div>
+  <h1 id="brand">Project</h1>
+  <input id="search" placeholder="Buscar jogos (ex: Zelda, FIFA)..." autocomplete="off">
+  <div id="theme-gear" title="Tema">
     <div id="theme-menu">
       <button data-theme="light">Claro</button>
       <button data-theme="dark">Escuro</button>
     </div>
   </div>
+  <div style="position:relative;right:400px"></div>
 </nav>
-
-<div id="suggestions" aria-live="polite"></div>
 
 <main id="main"></main>
 
-<!-- detail modal (when click card) -->
-<div id="detail-page">
-  <div id="detail-card">
-    <button id="detail-close" style="float:right;background:#111;color:#fff;border:none;padding:6px;border-radius:8px;cursor:pointer">Fechar</button>
-    <h2 id="detail-title" style="margin-top:6px"></h2>
-    <img id="detail-img" src="" style="width:100%;max-height:60vh;object-fit:contain;border-radius:8px;margin-top:12px">
-    <p id="detail-desc" style="color:#bdbdbd;margin-top:10px"></p>
+<!-- detail page (image) -->
+<div id="detail-page" style="display:none;padding:20px;">
+  <img id="detail-img" src="" style="width:100%;max-height:70vh;object-fit:contain;border-radius:12px;margin-bottom:12px">
+  <p id="detail-desc" style="color:#ccc"></p>
+</div>
+
+<!-- login modal -->
+<div id="login-modal">
+  <div class="modal-content">
+    <h3 style="margin-bottom:8px">Entrar (username)</h3>
+    <input id="login-input" placeholder="Seu username (exato)">
+    <button id="login-save">Entrar</button>
   </div>
 </div>
 
 <!-- friend profile modal -->
 <div id="friend-profile-modal">
-  <div id="friend-profile-card">
-    <img id="fp-avatar" src="https://via.placeholder.com/90" alt="avatar">
+  <div class="modal-content" style="text-align:center">
+    <img id="fp-avatar" src="https://via.placeholder.com/90" width="90" height="90" style="border-radius:50%;margin-bottom:8px">
     <h3 id="fp-name">Nome</h3>
     <p id="fp-bio" class="small-muted">Bio</p>
     <div style="margin-top:12px">
-      <button id="fp-close" class="login-btn">Fechar</button>
-    </div>
-  </div>
-</div>
-
-<!-- login modal -->
-<div id="login-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1600;align-items:center;justify-content:center">
-  <div style="background:#080809;padding:18px;border-radius:12px;width:320px">
-    <h3 style="color:#fff;margin-bottom:8px">Digite seu nome</h3>
-    <input id="login-input" placeholder="Seu username" style="width:100%;padding:10px;border-radius:8px;border:1px solid #222;background:#0b0b0b;color:#fff;margin-bottom:8px">
-    <div style="display:flex;gap:8px">
-      <button id="login-save" class="login-btn" style="flex:1">Salvar</button>
-      <button id="login-cancel" class="login-btn" style="flex:1;background:#333">Cancelar</button>
+      <button id="fp-close" style="width:100%">Fechar</button>
     </div>
   </div>
 </div>
 
 <!-- side menu -->
 <div id="side-menu" aria-hidden="true">
-  <button class="close-menu">&times;</button>
+  <button class="close-menu" title="Fechar">&times;</button>
+
   <div class="profile">
-    <img id="profile-pic" src="https://via.placeholder.com/80" alt="avatar">
+    <img id="profile-pic" src="https://via.placeholder.com/88" alt="avatar">
     <h2 id="profile-name">Convidado</h2>
-    <div id="profile-bio" class="small-muted">Sem bio</div>
+    <div id="profile-bio-mini" class="small-muted">Sem bio</div>
   </div>
 
-  <button id="menu-login-btn" class="login-btn">Login</button>
+  <div style="display:flex;gap:8px">
+    <button id="menu-login-btn" class="modal-content" style="background:#222;color:#fff;border-radius:10px;padding:10px;width:100%">Login</button>
+    <button id="logout-btn" class="modal-content" style="display:none;background:#151515;color:#fff;border-radius:10px;padding:10px;width:100%">Sair</button>
+  </div>
 
-  <div class="friends-section">
+  <div class="friends-section" style="margin-top:12px">
     <h4>AMIGOS</h4>
-    <div id="friends-list"><div class="small-muted">Nenhum amigo ainda</div></div>
+    <div id="friends-list" style="min-height:48px"></div>
 
     <div style="display:flex;gap:8px;margin-top:10px">
-      <button id="add-friend-btn" class="login-btn" style="flex:1">Adicionar</button>
-      <button id="open-requests-btn" class="login-btn" style="flex:1;background:#151515">Solicitações</button>
+      <button id="open-add-friend" class="modal-content" style="flex:1;background:#222">Adicionar</button>
+      <button id="open-requests" class="modal-content" style="flex:1;background:#151515">Solicitações</button>
     </div>
 
     <div id="requests-list" style="margin-top:12px;display:none"></div>
   </div>
 </div>
 
+<!-- autocomplete suggestions -->
+<div class="autocomplete-suggestions" id="suggestions" style="display:none;position:fixed;top:62px;left:16px;right:16px;z-index:1200;background:#18181F;border-radius:12px;padding:8px;max-height:260px;overflow:auto"></div>
+
 <script>
-/* ---------- UI glue ---------- */
+/* ---------- UI + RAWG (non-module) ---------- */
+const API_KEY = 'bfd4ae3a6ba14d47a3c627bad684acd8';
 const openMenu = document.getElementById('open-menu');
 const sideMenu = document.getElementById('side-menu');
-const closeMenu = sideMenu.querySelector('.close-menu');
+const closeMenuBtn = sideMenu.querySelector('.close-menu');
 const themeGear = document.getElementById('theme-gear');
 const themeMenu = document.getElementById('theme-menu');
 const searchInput = document.getElementById('search');
 const suggestionsDiv = document.getElementById('suggestions');
-const mainGrid = document.getElementById('main');
+const main = document.getElementById('main');
+const detailPage = document.getElementById('detail-page');
+const detailImg = document.getElementById('detail-img');
+const detailDesc = document.getElementById('detail-desc');
+
 const menuLoginBtn = document.getElementById('menu-login-btn');
 const loginModal = document.getElementById('login-modal');
-const loginCancel = document.getElementById('login-cancel');
 const loginSave = document.getElementById('login-save');
-const addFriendBtn = document.getElementById('add-friend-btn');
-const openRequestsBtn = document.getElementById('open-requests-btn');
+const loginInput = document.getElementById('login-input');
+const logoutBtn = document.getElementById('logout-btn');
+
+const openAddFriendBtn = document.getElementById('open-add-friend');
+const openRequestsBtn = document.getElementById('open-requests');
 const requestsListEl = document.getElementById('requests-list');
+
 const friendsListEl = document.getElementById('friends-list');
-const profileNameEl = document.getElementById('profile-name');
-const profilePicEl = document.getElementById('profile-pic');
-const profileBioEl = document.getElementById('profile-bio');
+
 const friendProfileModal = document.getElementById('friend-profile-modal');
 const fpAvatar = document.getElementById('fp-avatar');
 const fpName = document.getElementById('fp-name');
 const fpBio = document.getElementById('fp-bio');
 const fpClose = document.getElementById('fp-close');
-const detailPage = document.getElementById('detail-page');
-const detailClose = document.getElementById('detail-close');
-const detailTitle = document.getElementById('detail-title');
-const detailImg = document.getElementById('detail-img');
-const detailDesc = document.getElementById('detail-desc');
 
-openMenu.onclick = () => { sideMenu.classList.add('open'); sideMenu.setAttribute('aria-hidden','false'); }
-closeMenu.onclick = () => { sideMenu.classList.remove('open'); sideMenu.setAttribute('aria-hidden','true'); }
-themeGear.onclick = () => { themeMenu.style.display = themeMenu.style.display === 'block' ? 'none' : 'block'; }
-themeMenu.querySelectorAll('button').forEach(b => b.addEventListener('click', ()=> {
-  document.body.classList.toggle('light', b.dataset.theme === 'light');
-  themeMenu.style.display = 'none';
-}));
+const profileNameEl = document.getElementById('profile-name');
+const profilePicEl = document.getElementById('profile-pic');
+const profileBioMini = document.getElementById('profile-bio-mini');
 
-menuLoginBtn.onclick = ()=> { loginModal.style.display = 'flex'; }
-loginCancel.onclick = ()=> { loginModal.style.display = 'none'; }
-fpClose.onclick = ()=> { friendProfileModal.style.display = 'none'; }
-friendProfileModal.addEventListener('click', e => { if(e.target === friendProfileModal) friendProfileModal.style.display = 'none' });
-detailClose.onclick = ()=> detailPage.style.display = 'none';
-
-/* close suggestions when clicking outside */
-document.addEventListener('click', (e)=>{
-  if(!suggestionsDiv.contains(e.target) && e.target !== searchInput) suggestionsDiv.style.display = 'none';
+openMenu.addEventListener('click', ()=> {
+  sideMenu.classList.add('open');
+  sideMenu.setAttribute('aria-hidden','false');
 });
-</script>
+closeMenuBtn.addEventListener('click', ()=> {
+  sideMenu.classList.remove('open');
+  sideMenu.setAttribute('aria-hidden','true');
+});
 
-<!-- RAWG + card rendering (UI-only; uses API) -->
-<script>
-const RAWG_KEY = 'bfd4ae3a6ba14d47a3c627bad684acd8'; // your key
-let lastResults = [];
+// theme gear
+themeGear.addEventListener('click', ()=>{
+  themeMenu.style.display = themeMenu.style.display === 'block' ? 'none' : 'block';
+});
+themeMenu.querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click', ()=> {
+    if(btn.dataset.theme === 'light') document.body.classList.add('light');
+    else document.body.classList.remove('light');
+    themeMenu.style.display = 'none';
+  });
+});
 
-async function fetchGames(q){
-  try{
-    const res = await fetch(`https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${encodeURIComponent(q)}&page_size=12`);
-    const json = await res.json();
-    return json.results || [];
-  }catch(e){
+// login modal open
+menuLoginBtn.addEventListener('click', ()=> loginModal.style.display = 'flex');
+logoutBtn.addEventListener('click', async ()=>{
+  // simply clear UI state (Firebase state handled in module)
+  profileNameEl.textContent = 'Convidado';
+  profilePicEl.src = 'https://via.placeholder.com/88';
+  profileBioMini.textContent = 'Sem bio';
+  logoutBtn.style.display = 'none';
+  menuLoginBtn.style.display = 'inline-block';
+  // dispatch signout event for firebase module to cleanup
+  window.dispatchEvent(new Event('app:signout'));
+});
+
+// add friend prompt (dispatch to module)
+openAddFriendBtn.addEventListener('click', async ()=>{
+  const name = prompt('Digite o username exato do amigo:');
+  if(!name) return;
+  window.dispatchEvent(new CustomEvent('app:addFriendRequest', { detail: { to: name } }));
+});
+
+// toggle requests pane
+openRequestsBtn.addEventListener('click', ()=> {
+  requestsListEl.style.display = requestsListEl.style.display === 'block' ? 'none' : 'block';
+});
+
+// friend profile modal
+fpClose.addEventListener('click', ()=> friendProfileModal.style.display = 'none');
+friendProfileModal.addEventListener('click', (e)=> { if(e.target===friendProfileModal) friendProfileModal.style.display = 'none' });
+
+// back to main
+document.getElementById('brand').addEventListener('click', ()=>{
+  detailPage.style.display = 'none';
+  main.style.display = 'grid';
+  searchInput.value = '';
+  suggestionsDiv.style.display = 'none';
+  renderGames([]);
+});
+
+/* RAWG search + render (keeps your old behavior) */
+function debounce(fn, ms=300){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+
+async function fetchGames(query) {
+  try {
+    const res = await fetch(`https://api.rawg.io/api/games?key=${API_KEY}&search=${encodeURIComponent(query)}&page_size=10`);
+    const data = await res.json();
+    return data.results || [];
+  } catch(e){
     console.error('RAWG error', e);
     return [];
   }
 }
 
-let debounceTimer = null;
-searchInput.addEventListener('input', ()=>{
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(async ()=>{
-    const q = searchInput.value.trim();
-    suggestionsDiv.innerHTML = '';
-    if(!q){ suggestionsDiv.style.display='none'; return; }
-    const games = await fetchGames(q);
-    lastResults = games;
-    if(games.length === 0){ suggestionsDiv.style.display='none'; return; }
-    games.slice(0,8).forEach(g=>{
-      const div = document.createElement('div');
-      div.className = 'suggestion';
-      const img = document.createElement('img');
-      img.src = g.background_image || 'https://via.placeholder.com/60';
-      const span = document.createElement('span');
-      span.textContent = g.name;
-      div.appendChild(img);
-      div.appendChild(span);
-      div.onclick = ()=> {
-        renderGames([g]);
-        suggestionsDiv.style.display = 'none';
-      };
-      suggestionsDiv.appendChild(div);
-    });
-    suggestionsDiv.style.display = 'block';
-  }, 260);
-});
+searchInput.addEventListener('input', debounce(async ()=>{
+  const q = searchInput.value.trim();
+  suggestionsDiv.innerHTML = '';
+  if(!q){ suggestionsDiv.style.display='none'; return; }
+  suggestionsDiv.style.display = 'block';
+  const loading = document.createElement('div'); loading.textContent = 'Carregando...'; loading.style.color='#ccc';
+  suggestionsDiv.appendChild(loading);
 
-/* render initial (if any saved games) */
-function renderGames(list){
-  mainGrid.innerHTML = '';
-  list.forEach(g=>{
-    const card = document.createElement('div');
-    card.className = 'card';
-    const img = document.createElement('img');
-    img.src = g.background_image || 'https://via.placeholder.com/400x220';
+  const games = await fetchGames(q);
+  suggestionsDiv.innerHTML = '';
+  if(!games.length){ const none=document.createElement('div'); none.textContent='Nenhum resultado'; none.style.color='#999'; suggestionsDiv.appendChild(none); return; }
+  games.forEach(g=>{
+    const el = document.createElement('div'); el.className='suggestion'; el.style.padding='8px'; el.style.display='flex'; el.style.gap='8px'; el.style.alignItems='center'; el.style.cursor='pointer';
+    const img = document.createElement('img'); img.src = g.background_image || 'https://via.placeholder.com/40'; img.style.width='40px'; img.style.height='40px'; img.style.objectFit='cover'; img.style.borderRadius='6px';
+    const span = document.createElement('span'); span.textContent = g.name;
+    el.appendChild(img); el.appendChild(span);
+    el.addEventListener('click', ()=> {
+      searchInput.value = g.name;
+      suggestionsDiv.style.display = 'none';
+      renderGames([ { name: g.name, desc: g.released || '', img: g.background_image || '' } ]);
+    });
+    suggestionsDiv.appendChild(el);
+  });
+}), 250);
+
+function renderGames(custom=[]){
+  main.innerHTML = '';
+  let games = custom.length ? custom : [];
+  if(!games.length){
+    const none = document.createElement('div'); none.className = 'small-muted'; none.textContent = 'Nenhum jogo carregado. Busque pelo campo acima.';
+    none.style.padding = '12px';
+    main.appendChild(none);
+    return;
+  }
+  games.forEach(g=>{
+    const card = document.createElement('div'); card.className = 'card';
+    const img = document.createElement('img'); img.src = g.img || 'https://via.placeholder.com/480x220';
     card.appendChild(img);
-    card.onclick = ()=> {
-      detailTitle.textContent = g.name;
-      detailImg.src = g.background_image || '';
-      detailDesc.textContent = `Lançamento: ${g.released || '—'}\nNotas: ${g.rating || '—'}`;
-      detailPage.style.display = 'flex';
-    };
-    mainGrid.appendChild(card);
+    card.addEventListener('click', ()=>{
+      detailPage.style.display = 'block';
+      main.style.display = 'none';
+      detailImg.src = g.img || 'https://via.placeholder.com/480x220';
+      detailDesc.textContent = g.desc || '';
+    });
+    main.appendChild(card);
   });
 }
 
-/* initial empty */
+/* initial empty render */
 renderGames([]);
 </script>
 
-<!-- FIREBASE MODULE: friends, requests, realtime -->
+<!-- FIREBASE MODULE -->
 <script type="module">
+/* Firebase modular (v10) */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-app.js";
 import {
   getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove,
   collection, addDoc, query, where, getDocs, onSnapshot, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
 
-/* Your firebase config (as provided) */
+/* Use the config you provided (adjust if needed) */
 const firebaseConfig = {
   apiKey: "AIzaSyCDsIWhMHMRePqWHPVgaTWaEIVfWNVeMQo",
   authDomain: "project-6787c.firebaseapp.com",
@@ -276,18 +340,25 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let currentUser = null; // string username
+/* UI refs (from outer scope) */
+const loginModalEl = document.getElementById('login-modal');
+const loginSaveBtn = document.getElementById('login-save');
+const loginInputEl = document.getElementById('login-input');
+const menuLoginBtnEl = document.getElementById('menu-login-btn');
+const logoutBtnEl = document.getElementById('logout-btn');
+const profileNameEl = document.getElementById('profile-name');
+const profilePicEl = document.getElementById('profile-pic');
+const profileBioMiniEl = document.getElementById('profile-bio-mini');
 
-// helper: get user doc or null
-async function getUserDoc(username){
-  if(!username) return null;
-  const ref = doc(db, 'users', username);
-  const snap = await getDoc(ref);
-  return snap.exists() ? snap : null;
-}
+let currentUser = null;
+let userUnsub = null;
+let requestsUnsub = null;
 
-// create user if not exists
-async function ensureUser(username){
+/* safe helper */
+function safeText(s){ return (s||'').toString(); }
+
+/* create-or-get user on login */
+async function ensureUserDoc(username){
   const ref = doc(db, 'users', username);
   const snap = await getDoc(ref);
   if(!snap.exists()){
@@ -297,162 +368,163 @@ async function ensureUser(username){
       avatar: 'https://via.placeholder.com/90',
       friends: []
     }, { merge: true });
-    return await getDoc(ref);
+    return (await getDoc(ref));
   }
   return snap;
 }
 
-/* LOGIN flow */
-const loginInputEl = document.getElementById('login-input');
-const loginModalEl = document.getElementById('login-modal');
-loginSave.addEventListener('click', async ()=>{
-  const username = (loginInputEl.value || '').trim();
-  if(!username){ alert('Digite um nome'); return; }
+/* login handler */
+loginSaveBtn.addEventListener('click', async ()=> {
+  const username = loginInputEl.value.trim();
+  if(!username){ alert('Digite um username'); return; }
+  loginSaveBtn.disabled = true;
+  loginSaveBtn.textContent = 'Entrando...';
   try{
-    await ensureUser(username);
+    const snap = await ensureUserDoc(username);
     currentUser = username;
-    // update side UI
-    document.getElementById('profile-name').textContent = username;
-    const userSnap = await getUserDoc(username);
-    const data = userSnap.data();
-    if(data.avatar) profilePicEl.src = data.avatar;
-    profileBioEl.textContent = data.bio || 'Sem bio';
-    menuLoginBtn.style.display = 'none';
+    // update UI
+    profileNameEl.textContent = username;
+    profilePicEl.src = snap.data().avatar || 'https://via.placeholder.com/90';
+    profileBioMiniEl.textContent = snap.data().bio || 'Sem bio';
+    menuLoginBtnEl.style.display = 'none';
+    logoutBtnEl.style.display = 'inline-block';
     loginModalEl.style.display = 'none';
-    // start real-time listeners
-    attachRealtimeListeners();
+    loginInputEl.value = '';
+    // attach realtime listeners
+    attachUserListeners();
+    // load initial lists
     loadFriendsOnce();
-    loadIncomingRequestsOnce();
-  }catch(err){
-    console.error(err);
-    alert('Erro no login (ver console)');
+    // start watching incoming requests realtime
+    watchIncomingRequestsRealtime();
+    alert('Logado como ' + username);
+  }catch(e){
+    console.error(e);
+    alert('Erro ao logar. Veja console.');
+  }finally{
+    loginSaveBtn.disabled = false;
+    loginSaveBtn.textContent = 'Entrar';
   }
 });
 
-/* attach realtime watchers */
-let userUnsub = null;
-let requestsUnsub = null;
+/* signout cleanup */
+window.addEventListener('app:signout', ()=>{
+  currentUser = null;
+  if(userUnsub) userUnsub(); userUnsub = null;
+  if(requestsUnsub) requestsUnsub(); requestsUnsub = null;
+});
 
-function attachRealtimeListeners(){
+/* attach realtime for user doc (friends/bio/avatar changes) */
+function attachUserListeners(){
   if(!currentUser) return;
-  const uref = doc(db, 'users', currentUser);
+  const uref = doc(db,'users', currentUser);
   if(userUnsub) userUnsub();
   userUnsub = onSnapshot(uref, snap=>{
     if(!snap.exists()) return;
     const data = snap.data();
     profileNameEl.textContent = data.name || currentUser;
-    if(data.avatar) profilePicEl.src = data.avatar;
-    profileBioEl.textContent = data.bio || 'Sem bio';
-    // render friends from doc
+    profilePicEl.src = data.avatar || 'https://via.placeholder.com/90';
+    profileBioMiniEl.textContent = data.bio || 'Sem bio';
     renderFriends(data.friends || []);
   });
-  // watch incoming requests realtime
-  watchIncomingRequestsRealtime();
 }
 
-/* render friends */
+/* render friends (called by listener) */
+async function renderFriends(friends){
+  const friendsListEl = document.getElementById('friends-list');
+  while(friendsListEl.firstChild) friendsListEl.removeChild(friendsListEl.firstChild);
+  if(!friends || friends.length === 0){
+    const none = document.createElement('div'); none.className = 'small-muted'; none.textContent = 'Nenhum amigo ainda'; friendsListEl.appendChild(none); return;
+  }
+  for(const fname of friends){
+    try{
+      const fsnap = await getDoc(doc(db,'users',fname));
+      if(!fsnap.exists()) continue;
+      const f = fsnap.data();
+      const card = document.createElement('div'); card.className = 'friend-card';
+      card.innerHTML = `<img src="${f.avatar||'https://via.placeholder.com/90'}"><div class="friend-name">${f.name}</div>`;
+      card.addEventListener('click', ()=> showFriendProfile(f));
+      friendsListEl.appendChild(card);
+    }catch(e){ console.error('friend render error', e); }
+  }
+}
+
+/* load friends once (for initial load) */
 async function loadFriendsOnce(){
   if(!currentUser) return;
-  const uref = doc(db, 'users', currentUser);
-  const snap = await getDoc(uref);
-  if(!snap.exists()) return;
-  renderFriends(snap.data().friends || []);
-}
-
-async function renderFriends(friends){
-  friendsListEl.innerHTML = '';
-  if(!friends || friends.length === 0){
-    friendsListEl.innerHTML = '<div class="small-muted">Nenhum amigo ainda</div>';
-    return;
-  }
-  for(const name of friends){
-    try{
-      const fsnap = await getUserDoc(name);
-      const fdata = fsnap ? fsnap.data() : { name, avatar: 'https://via.placeholder.com/80' };
-      const div = document.createElement('div');
-      div.className = 'friend-card';
-      div.innerHTML = `<img src="${fdata.avatar}"><div style="font-weight:700">${fdata.name}</div>`;
-      div.onclick = ()=> showFriendProfile(fdata);
-      friendsListEl.appendChild(div);
-    }catch(e){
-      console.error('renderFriends error', e);
-    }
-  }
+  try{
+    const snap = await getDoc(doc(db,'users', currentUser));
+    if(!snap.exists()) return;
+    const data = snap.data();
+    renderFriends(data.friends || []);
+  }catch(e){ console.error(e); }
 }
 
 /* show friend profile modal */
 function showFriendProfile(data){
   fpAvatar.src = data.avatar || 'https://via.placeholder.com/90';
-  fpName.textContent = data.name || '—';
+  fpName.textContent = safeText(data.name);
   fpBio.textContent = data.bio || 'Sem bio';
   friendProfileModal.style.display = 'flex';
 }
 
-/* SEND friend request */
-addFriendBtn.addEventListener('click', async ()=>{
-  const to = prompt('Digite o username exato do amigo:');
-  if(!to) return;
-  if(!currentUser) return alert('Faça login antes');
+/* ---------- FRIEND REQUESTS ---------- */
+
+/* sending a request */
+window.addEventListener('app:addFriendRequest', async (e)=>{
+  const to = e.detail?.to;
+  if(!to) return alert('Nome inválido');
+  if(!currentUser) return alert('Você precisa logar para adicionar amigos');
   if(to === currentUser) return alert('Você não pode adicionar você mesmo.');
   try{
-    // recipient exists?
-    const recSnap = await getUserDoc(to);
-    if(!recSnap) return alert('Usuário não encontrado.');
-    // already friends?
-    const mySnap = await getUserDoc(currentUser);
-    const myData = mySnap ? mySnap.data() : {};
-    if((myData.friends||[]).includes(to)) return alert('Já é seu amigo.');
-    // existing pending requests from you to them?
-    const q = query(collection(db,'friendRequests'), where('from','==',currentUser), where('to','==',to), where('status','==','pending'));
-    const qs = await getDocs(q);
-    if(!qs.empty) return alert('Pedido já enviado.');
-    // create
+    // check recipient exists
+    const tref = doc(db,'users', to);
+    const tsnap = await getDoc(tref);
+    if(!tsnap.exists()) { alert('Usuário não encontrado'); return; }
+    // check already friends
+    const meSnap = await getDoc(doc(db,'users', currentUser));
+    const meData = meSnap.exists() ? meSnap.data() : {};
+    if((meData.friends||[]).includes(to)) { alert('Já é seu amigo'); return; }
+    // check existing request: from currentUser -> to OR from to -> currentUser (avoid duplicates)
+    const q1 = query(collection(db,'friendRequests'), where('from','==',currentUser), where('to','==',to));
+    const q2 = query(collection(db,'friendRequests'), where('from','==',to), where('to','==',currentUser));
+    const s1 = await getDocs(q1); if(!s1.empty){ alert('Pedido já enviado'); return; }
+    const s2 = await getDocs(q2); if(!s2.empty){ alert('Esse usuário já te enviou solicitação — verifique em Solicitações'); return; }
+    // create request doc
     await addDoc(collection(db,'friendRequests'), {
       from: currentUser,
       to,
       status: 'pending',
       createdAt: serverTimestamp()
     });
-    alert('Pedido enviado!');
+    alert('Solicitação enviada!');
   }catch(err){
-    console.error(err);
-    alert('Erro ao enviar pedido');
+    console.error(err); alert('Erro ao enviar solicitação');
   }
 });
 
-/* LOAD incoming requests once */
-async function loadIncomingRequestsOnce(){
-  if(!currentUser) return;
-  const q = query(collection(db,'friendRequests'), where('to','==',currentUser), where('status','==','pending'));
-  const snap = await getDocs(q);
-  renderRequests(snap.docs.map(d=>({ id:d.id, ...d.data() })));
-}
-
-/* watch incoming requests realtime */
+/* watch incoming requests realtime for "to == currentUser" */
 function watchIncomingRequestsRealtime(){
   if(!currentUser) return;
   if(requestsUnsub) requestsUnsub();
-  const q = query(collection(db,'friendRequests'), where('to','==',currentUser), where('status','==','pending'));
-  requestsUnsub = onSnapshot(q, snapshot=>{
-    const arr = snapshot.docs.map(d=>({ id:d.id, ...d.data() }));
+  const q = query(collection(db,'friendRequests'), where('to','==', currentUser), where('status','==','pending'));
+  requestsUnsub = onSnapshot(q, async snapshot=>{
+    const arr = snapshot.docs.map(d=>({ id: d.id, ...d.data() }));
     renderRequests(arr);
   });
 }
 
-/* render requests list */
-function clearChildren(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+/* render incoming requests list (UI) */
 async function renderRequests(list){
-  clearChildren(requestsListEl);
+  const el = document.getElementById('requests-list');
+  while(el.firstChild) el.removeChild(el.firstChild);
   if(!list || list.length === 0){
-    requestsListEl.innerHTML = '<div class="small-muted">Nenhuma solicitação</div>'; 
-    return;
+    const none = document.createElement('div'); none.className = 'small-muted'; none.textContent = 'Nenhuma solicitação'; el.appendChild(none); return;
   }
   for(const req of list){
     const from = req.from;
-    const fsnap = await getUserDoc(from);
-    const fdata = fsnap ? fsnap.data() : { name: from, avatar: 'https://via.placeholder.com/90' };
-    const card = document.createElement('div');
-    card.className = 'request-card';
+    const fsnap = await getDoc(doc(db,'users',from));
+    const fdata = fsnap.exists() ? fsnap.data() : { name: from, avatar: 'https://via.placeholder.com/90' };
+    const card = document.createElement('div'); card.className = 'request-card';
     card.innerHTML = `
       <div class="req-left">
         <img src="${fdata.avatar}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:1px solid #111">
@@ -466,53 +538,39 @@ async function renderRequests(list){
         <button class="req-decline">Recusar</button>
       </div>
     `;
-    // accept
     card.querySelector('.req-accept').addEventListener('click', async ()=>{
       try{
         // add each other
         await updateDoc(doc(db,'users',currentUser), { friends: arrayUnion(from) });
         await updateDoc(doc(db,'users',from), { friends: arrayUnion(currentUser) });
-        // remove request doc
+        // delete the request doc
         await deleteDoc(doc(db,'friendRequests', req.id));
-      }catch(err){
-        console.error(err);
-        alert('Erro ao aceitar');
-      }
+        // UI will update by realtime listeners
+      }catch(err){ console.error(err); alert('Erro ao aceitar'); }
     });
-    // decline
     card.querySelector('.req-decline').addEventListener('click', async ()=>{
       try{
         await deleteDoc(doc(db,'friendRequests', req.id));
-      }catch(err){
-        console.error(err);
-        alert('Erro ao recusar');
-      }
+      }catch(err){ console.error(err); alert('Erro ao recusar'); }
     });
-    requestsListEl.appendChild(card);
+    el.appendChild(card);
   }
 }
 
-/* toggle requests view */
-openRequestsBtn.addEventListener('click', ()=> {
-  requestsListEl.style.display = requestsListEl.style.display === 'none' ? 'block' : 'none';
-});
-
-/* try to detect if UI had username already set (rare case) */
+/* initial check if user was already set in UI (rare) */
 (async ()=>{
-  try{
-    const displayed = document.getElementById('profile-name').textContent;
-    if(displayed && displayed !== 'Convidado'){
-      const snap = await getUserDoc(displayed);
-      if(snap){
-        currentUser = displayed;
-        attachRealtimeListeners();
-        loadFriendsOnce();
-        loadIncomingRequestsOnce();
-        menuLoginBtn.style.display = 'none';
-      }
-    }
-  }catch(e){/* ignore */}
+  // nothing saved locally; user must login manually
 })();
+
+/* export watch function so UI can call when login completes */
+window.__app = {
+  onLogin: async (username)=>{
+    currentUser = username;
+    attachUserListeners();
+    watchIncomingRequestsRealtime();
+    await loadFriendsOnce();
+  }
+};
 </script>
 
 </body>
