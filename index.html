@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Project — Chat (imagem: enviar/receber)</title>
+<style>
+:root{
+  --bg:#0b0b0b; --card:#0e0e0e; --muted:#bdbdbd; --white:#ffffff;
+  --online:#1f8a42; --offline:#777; --radius:12px; --header-h:64px;
+}
+html,body{height:100%;margin:0;background:var(--bg);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--white);-webkit-font-smoothing:antialiased}
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:linear-gradient(180deg,var(--card),#090909);border-bottom:1px solid rgba(255,255,255,0.03);z-index:40}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{width:24px;height:24px}
+.brand .title{font-weight:700;letter-spacing:0.3px}
+.top-actions{display:flex;gap:8px;align-items:center}
+
+.layout{display:flex;flex:1;min-height:0;transition:all .36s cubic-bezier(.2,.9,.2,1)}
+.left{width:36%;max-width:420px;min-width:260px;background:var(--card);padding:16px;box-sizing:border-box;border-right:1px solid rgba(255,255,255,0.03);transform:translateX(-110%);opacity:0;pointer-events:none;position:relative;z-index:60;transition:transform .28s ease,opacity .28s ease}
+.layout.friends-open .left{transform:translateX(0);opacity:1;pointer-events:auto}
+.left .close-btn{margin-left:auto;background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:18px}
+.me{display:flex;gap:12px;align-items:center;margin-top:8px}
+.me img{width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,0.03)}
+.me .name{font-weight:700}
+.section-title{font-size:.86rem;color:var(--muted);margin-top:8px;margin-bottom:6px}
+.friends-list{overflow:auto;flex:1;padding-right:6px}
+.friend{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;cursor:pointer;transition:background .12s,transform .08s}
+.friend:active{transform:scale(.995)}
+.friend img{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,0.03);flex:0 0 44px}
+.friend .meta{display:flex;flex-direction:column}
+.friend .name{font-weight:700}
+.friend .small{font-size:0.85rem;color:var(--muted);display:inline-block}
+.status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-left:8px;border:2px solid rgba(11,11,11,1)}
+.status-online{background:var(--online); box-shadow:0 0 6px rgba(31,138,66,0.9)}
+.status-offline{background:var(--offline); box-shadow:none}
+
+.center{flex:1;display:flex;flex-direction:column;padding:12px 12px 96px 12px;box-sizing:border-box;min-width:0;transition:margin .36s cubic-bezier(.2,.9,.2,1)}
+.layout.friends-open .center{margin-left:36%}
+.chat-header{display:flex;align-items:center;gap:12px;padding-bottom:8px}
+.peer-avatar{width:48px;height:48px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,0.03);display:inline-block;flex:0 0 48px}
+.peer-name{font-weight:700}
+.peer-sub{font-size:0.9rem;color:var(--muted);display:flex;align-items:center;gap:8px}
+
+.messages{flex:1;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:8px;width:100%;scroll-behavior:smooth}
+.msg-row{display:flex;align-items:flex-end;gap:8px;width:100%}
+
+/* bolha - ajuste para não encolher do lado do emissor */
+.msg{
+  max-width: calc(100% - 72px);
+  padding:10px 14px;
+  border-radius:14px;
+  word-break:break-word;
+  box-shadow:0 10px 30px rgba(0,0,0,0.45);
+  display:flex;
+  flex-direction:column;
+  text-align:left;
+  align-items:flex-start;
+  flex: 0 1 auto;
+}
+.msg.me{background:#000;color:#fff}
+.msg.their{background:#fff;color:#000}
+
+.msg .meta{
+  display:block;
+  font-size:0.78rem;
+  margin-bottom:6px;
+  font-weight:700;
+  line-height:1;
+  text-align:left;
+  width:100%;
+}
+.msg.their .meta{ color:#111; }
+.msg.me .meta{ color:#bbb; }
+
+.msg-avatar{width:36px;height:36px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,0.03);flex:0 0 36px;align-self:flex-end}
+.msg-image{max-width:100%;height:auto;border-radius:10px;display:block;margin-top:8px;cursor:pointer;object-fit:cover}
+
+/* small UI bits */
+.requests-badge{position:relative;display:inline-block}
+.requests-badge .count{position:absolute;right:-6px;top:-6px;background:#ff4d4f;color:white;border-radius:999px;padding:2px 6px;font-size:12px}
+
+/* composer */
+.composer{position:fixed;right:12px;left:12px;bottom:12px;display:flex;gap:8px;align-items:center;padding:10px;background:var(--card);border-radius:14px;border-top:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(0,0,0,0.6);z-index:30}
+.composer .preview img{width:84px;height:84px;border-radius:8px;object-fit:cover}
+.composer input[type="text"]{flex:1;padding:12px 14px;border-radius:10px;background:#080808;border:1px solid rgba(255,255,255,0.03);color:var(--white);outline:none}
+.btn{padding:10px 12px;border-radius:10px;border:none;cursor:pointer}
+.btn:active{transform:scale(.98)}
+.btn-send{background:#fff;color:#000;font-weight:700}
+.btn-plain{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.03)}
+
+.center.no-active .chat-header,
+.center.no-active .messages,
+.center.no-active .composer {
+  display: none;
+}
+.center .empty-placeholder{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:1;
+  color:var(--muted);
+  font-size:1rem;
+  text-align:center;
+}
+
+@media (max-width:900px){
+  :root{ --header-h:56px; }
+  header{padding:0 12px}
+  .left{position:fixed;left:0;top:var(--header-h);bottom:0;transform:translateX(-6%);width:86%;max-width:none;min-width:0;padding:12px;border-radius:0 8px 8px 0;box-shadow:0 20px 60px rgba(0,0,0,0.7)}
+  .layout.friends-open .left{transform:translateX(0)}
+  .layout.friends-open .center{margin-left:0}
+  .center{padding:8px 8px 140px 8px}
+  .msg{max-width:85%}
+  .composer{position:fixed;left:0;right:0;bottom:0;border-radius:0;padding:10px 12px;height:auto;display:flex;align-items:center;gap:8px}
+  .composer input[type="text"]{padding:12px 14px;font-size:16px}
+  .btn{padding:12px 14px;border-radius:10px}
+  .btn-send{padding:12px 14px}
+  .friend{padding:12px}
+}
+
+.click-pop{ transform:scale(.98); transition: transform .08s }
+.visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0)}
+#login-modal{display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:500}
+#login-card{background:#222;padding:18px;border-radius:10px;min-width:260px}
+#login-card input{padding:8px;width:100%;border-radius:6px;border:1px solid #333;background:#111;color:#eee}
+#login-card button{margin-top:10px;width:100%;padding:8px;border-radius:8px;border:none;background:#fff;color:#000;font-weight:700;cursor:pointer}
+
+/* story modal */
+#storiesModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;z-index:600}
+#storiesCard{width:90%;max-width:760px;background:#0e0e0e;padding:12px;border-radius:12px}
+.story-item{display:flex;gap:8px;align-items:center;padding:8px;border-radius:8px}
+.story-item img{width:120px;height:80px;object-fit:cover;border-radius:8px}
+
+/* requests modal */
+#requestsModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:601}
+#requestsCard{width:360px;background:#111;padding:12px;border-radius:10px}
+.req-row{display:flex;align-items:center;justify-content:space-between;padding:8px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.req-actions{display:flex;gap:8px}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="brand" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" stroke="white" stroke-opacity="0.06" stroke-width="1.6"/><path d="M7.5 12h9" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <div class="title">Project</div>
+    </div>
+
+    <div class="top-actions">
+      <button id="btnOpenFriends" class="icon-btn" aria-label="Amigos" title="Amigos" type="button"></button>
+
+      <!-- add friend -->
+      <button id="btnAddFriend" class="icon-btn" title="Adicionar amigo" aria-label="Adicionar amigo"></button>
+
+      <!-- requests (badge) -->
+      <div class="requests-badge">
+        <button id="btnRequests" class="icon-btn" title="Pedidos" aria-label="Pedidos"></button>
+        <span id="requestsCount" class="count" style="display:none">0</span>
+      </div>
+
+      <!-- stories -->
+      <button id="btnStories" class="icon-btn" title="Stories" aria-label="Stories"></button>
+
+      <button id="btnOpenProfile" class="icon-btn" title="Perfil" aria-label="Abrir perfil"></button>
+    </div>
+  </header>
+
+  <div class="layout" id="layoutRoot">
+    <aside class="left" id="leftPanel" aria-hidden="true">
+      <div style="display:flex;align-items:center;gap:8px">
+        <strong>Amigos</strong>
+        <button id="closeFriends" class="close-btn" title="Fechar lista"></button>
+      </div>
+
+      <div class="me" style="margin-top:10px">
+        <img id="meAvatarLeft" src="https://via.placeholder.com/56" alt="me" data-user="">
+        <div class="info">
+          <div class="name" id="meNameLeft">Convidado</div>
+          <div class="small" id="meBioLeft">Editar perfil</div>
+        </div>
+      </div>
+
+      <div class="section-title">Lista</div>
+      <div class="friends-list" id="friendsList" aria-live="polite"></div>
+    </aside>
+
+    <main class="center no-active" id="centerMain">
+      <div class="chat-header">
+        <img id="peerAvatarTop" class="peer-avatar" src="https://via.placeholder.com/48" style="display:none" alt="peer" data-user="">
+        <div class="peer-info">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="peer-name" id="peerName">Nenhum chat selecionado</div>
+            <span id="peerDotInline" class="status-dot status-offline" title="status-inline" style="display:none"></span>
+          </div>
+          <div class="peer-status-row" aria-hidden="false">
+            <div class="peer-sub" id="peerSub"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-placeholder" id="emptyPlaceholder">Selecione um amigo para começar</div>
+
+      <div class="messages" id="messages" role="log" aria-live="polite"></div>
+
+      <div class="composer" id="composer" aria-label="Composer de mensagens">
+        <div id="composerPreview" style="display:none"></div>
+        <input id="inputText" type="text" placeholder="Digite mensagem..." autocomplete="off" disabled>
+        <button id="btnAttach" class="btn btn-plain" title="Anexar imagem">Midia</button>
+        <input id="inputFile" type="file" accept="image/*" style="display:none">
+        <button id="btnSend" class="btn btn-send" disabled>Enviar</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Requests modal -->
+<div id="requestsModal">
+  <div id="requestsCard">
+    <h3 style="margin:6px 0 12px 0">Pedidos de amizade</h3>
+    <div id="requestsList"></div>
+    <div style="text-align:right;margin-top:8px">
+      <button onclick="document.getElementById('requestsModal').style.display='none'" class="btn btn-plain">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stories modal -->
+<div id="storiesModal">
+  <div id="storiesCard">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:6px 0">Stories</h3>
+      <div>
+        <input id="storyFile" type="file" accept="image/*" style="display:none">
+        <button id="btnAddStory" class="btn btn-plain">Adicionar story</button>
+        <button id="closeStories" class="btn btn-plain">Fechar</button>
+      </div>
+    </div>
+    <div id="storiesList" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- profile modal -->
+<div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:200">
+  <div style="width:420px;background:#0e0e0e;padding:20px;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,0.7)">
+    <div style="display:flex;gap:12px;align-items:center">
+      <img id="profileAvatar" src="https://via.placeholder.com/84" style="width:84px;height:84px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,0.03)">
+      <div style="flex:1">
+        <input id="profileName" placeholder="Seu nome (opcional)" style="width:100%;padding:10px;border-radius:8px;background:#0b0b0b;border:1px solid rgba(255,255,255,0.03);color:white">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="btnChangeAvatar" class="btn btn-plain">Alterar foto</button>
+          <input id="profileFile" type="file" accept="image/*" style="display:none">
+          <button id="btnSaveProfile" class="btn btn-send">Salvar</button>
+          <button id="btnCloseProfile" class="btn btn-plain">Fechar</button>
+        </div>
+      </div>
+    </div>
+    <textarea id="profileBio" placeholder="Bio" style="width:100%;height:90px;margin-top:12px;border-radius:8px;background:#0b0b0b;border:1px solid rgba(255,255,255,0.03);color:white;padding:8px"></textarea>
+  </div>
+</div>
+
+<!-- LOGIN modal -->
+<div id="login-modal">
+  <div id="login-card">
+    <input id="login-username" placeholder="Seu username" />
+    <button id="login-ok">Entrar</button>
+  </div>
+</div>
+
+<!-- Firebase (mantido para Firestore + auth/presence) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+<!-- Supabase client (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* Supabase client (renomeado) */
+const SUPABASE_URL = "https://psefyuszpacdfhjrqvwd.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzZWZ5dXN6cGFjZGZoanJxdndkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MjgwMjQsImV4cCI6MjA4MzMwNDAyNH0.E2qZxPEim9bW4P4jsHkybsbUYdInGIV19ZMXOHdQXCg";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+
+<script>
+/* ========== FIREBASE ========== */
+firebase.initializeApp({
+  apiKey: "AIzaSyBKotEIdaCZbPs3e6cX-0Pnlfa9pqomJ5o",
+  authDomain: "chat-36f52.firebaseapp.com",
+  projectId: "chat-36f52"
+});
+const db = firebase.firestore();
+
+/* ========== DOM refs ========== */
+const layoutRoot = document.getElementById('layoutRoot');
+const btnOpenFriends = document.getElementById('btnOpenFriends');
+const closeFriends = document.getElementById('closeFriends');
+const friendsList = document.getElementById('friendsList');
+
+const loginModal = document.getElementById('login-modal');
+const loginUsername = document.getElementById('login-username');
+const loginOk = document.getElementById('login-ok');
+
+const meAvatarLeft = document.getElementById('meAvatarLeft');
+const meNameLeft = document.getElementById('meNameLeft');
+const meBioLeft = document.getElementById('meBioLeft');
+
+const btnOpenProfile = document.getElementById('btnOpenProfile');
+const profileModal = document.getElementById('profileModal');
+const btnChangeAvatar = document.getElementById('btnChangeAvatar');
+const profileFile = document.getElementById('profileFile');
+const profileAvatar = document.getElementById('profileAvatar');
+const profileName = document.getElementById('profileName');
+const profileBio = document.getElementById('profileBio');
+const btnSaveProfile = document.getElementById('btnSaveProfile');
+const btnCloseProfile = document.getElementById('btnCloseProfile');
+
+const peerAvatarTop = document.getElementById('peerAvatarTop');
+const peerName = document.getElementById('peerName');
+const peerDotInline = document.getElementById('peerDotInline');
+const peerSub = document.getElementById('peerSub');
+const messagesEl = document.getElementById('messages');
+
+const centerMain = document.getElementById('centerMain');
+const emptyPlaceholder = document.getElementById('emptyPlaceholder');
+
+const inputText = document.getElementById('inputText');
+const btnAttach = document.getElementById('btnAttach');
+const inputFile = document.getElementById('inputFile');
+const btnSend = document.getElementById('btnSend');
+const composerPreview = document.getElementById('composerPreview');
+
+const btnAddFriend = document.getElementById('btnAddFriend');
+const btnRequests = document.getElementById('btnRequests');
+const requestsCount = document.getElementById('requestsCount');
+const requestsModal = document.getElementById('requestsModal');
+const requestsList = document.getElementById('requestsList');
+
+const btnStories = document.getElementById('btnStories');
+const storiesModal = document.getElementById('storiesModal');
+const closeStories = document.getElementById('closeStories');
+const storyFile = document.getElementById('storyFile');
+const btnAddStory = document.getElementById('btnAddStory');
+const storiesList = document.getElementById('storiesList');
+
+let currentUser = null;
+let profileCache = {};
+let activePeer = null;
+let unsubChat = null;
+let unsubPeer = null;
+
+/* local upload refs */
+let pendingFileLocal = null;
+
+/* ========== helpers ========== */
+function normalize(u){ return (u||'').toString().trim().toLowerCase(); }
+function toast(m){ alert(m); }
+function dbg(...a){ console.log('[DBG]', ...a); }
+
+/* ========== audio ========== */
+let audioCtx = null;
+function playSendSound(){ try{ if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const t = audioCtx.currentTime; const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(900, t); o.frequency.exponentialRampToValueAtTime(600, t + 0.12); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.25);}catch(e){ console.warn('audio failed', e); } }
+window.playSendSound = playSendSound;
+
+/* ========== Auth (anonymous for presence tests) ========== */
+firebase.auth().signInAnonymously().catch(err=>console.warn('Firebase auth failed (anonymous):', err));
+
+/* ========== presence helper ========== */
+async function setOnlineState(on){
+  if(!currentUser) return;
+  try{
+    await db.doc('users/'+currentUser).update({ online: !!on, lastSeen: firebase.firestore.FieldValue.serverTimestamp() });
+  }catch(e){
+    if(on){
+      await db.doc('users/'+currentUser).set({ name: currentUser, bio:'', avatar:'', friends:[], online:true, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+    }
+  }
+}
+window.addEventListener('beforeunload', ()=> { if(currentUser) db.doc('users/'+currentUser).update({ online:false, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{}); });
+
+/* ========== LOGIN ========== */
+loginOk.onclick = async ()=>{
+  const raw = (loginUsername.value||'').trim();
+  const id = normalize(raw);
+  if(!id){ toast('Digite username'); return; }
+
+  const userRef = db.doc('users/'+id);
+  const snap = await userRef.get();
+  const displayName = raw || id;
+
+  if(!snap.exists){
+    await userRef.set({ name: displayName, bio:'', avatar:'', friends:[], online:true, lastSeen: firebase.firestore.FieldValue.serverTimestamp() });
+  } else {
+    await userRef.update({ online:true, lastSeen: firebase.firestore.FieldValue.serverTimestamp() });
+  }
+
+  const data = (await userRef.get()).data();
+  currentUser = id;
+  profileCache[currentUser] = { name: data.name || displayName, avatar: data.avatar || '', bio: data.bio || '', online: data.online || false, lastSeen: data.lastSeen || null };
+
+  meNameLeft.textContent = profileCache[currentUser].name || currentUser;
+  meBioLeft.textContent = profileCache[currentUser].bio || '';
+  meAvatarLeft.src = profileCache[currentUser].avatar || 'https://via.placeholder.com/56';
+  meAvatarLeft.dataset.user = currentUser;
+
+  try{ loginModal.remove(); }catch(e){ loginModal.style.display='none'; }
+
+  centerMain.classList.add('no-active');
+  inputText.value = '';
+  btnSend.disabled = true;
+  inputText.disabled = true;
+
+  await setOnlineState(true);
+  watchFriends();
+  watchRequests(); // start requests watcher
+  watchStoriesRealtime();
+};
+loginUsername.addEventListener('keydown', e=> { if(e.key==='Enter') loginOk.click(); });
+
+/* ========== UI toggles ========== */
+btnOpenFriends.addEventListener('click', ()=> {
+  const opened = layoutRoot.classList.toggle('friends-open');
+  document.getElementById('leftPanel').setAttribute('aria-hidden', opened ? 'false' : 'true');
+  btnOpenFriends.classList.add('click-pop');
+  setTimeout(()=> btnOpenFriends.classList.remove('click-pop'), 140);
+});
+closeFriends.addEventListener('click', ()=> { layoutRoot.classList.remove('friends-open'); document.getElementById('leftPanel').setAttribute('aria-hidden','true'); });
+
+btnOpenProfile.addEventListener('click', ()=> { if(!currentUser){ toast('Faça login primeiro'); return; } profileModal.style.display='flex'; });
+btnCloseProfile.addEventListener('click', ()=> profileModal.style.display='none');
+
+btnAddFriend.addEventListener('click', async () => {
+  if (!currentUser) return toast('Faça login primeiro');
+  const raw = prompt('Digite o username do amigo:');
+  if (!raw) return;
+  const target = normalize(raw);
+  if (target === currentUser) return toast('Você não pode se adicionar.');
+  const snap = await db.doc('users/' + target).get();
+  if (!snap.exists) return toast('Usuário não encontrado.');
+  await db.collection('friendRequests').add({
+    from: currentUser,
+    to: target,
+    status: 'pending',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  toast('Pedido enviado!');
+});
+
+/* ========== Requests (watcher + UI) ==========
+   - shows badge count
+   - modal lists requests with accept/decline
+*/
+let currentRequests = {}; // id -> doc ref + data
+
+function watchRequests(){
+  if(!currentUser) return;
+  db.collection('friendRequests').where('to','==',currentUser).where('status','==','pending')
+    .onSnapshot(snap=>{
+      currentRequests = {};
+      requestsList.innerHTML = '';
+      if(snap.empty){
+        requestsCount.style.display = 'none';
+        return;
+      }
+      requestsCount.style.display = 'inline-block';
+      requestsCount.textContent = String(snap.size);
+      snap.docs.forEach(doc=>{
+        const data = doc.data();
+        currentRequests[doc.id] = { id: doc.id, ref: doc.ref, data };
+        // build list for modal
+        const row = document.createElement('div'); row.className = 'req-row';
+        const left = document.createElement('div'); left.style.display='flex'; left.style.alignItems='center'; left.style.gap='8px';
+        const avatar = document.createElement('img'); avatar.src = data.from && profileCache[data.from]?.avatar ? profileCache[data.from].avatar : 'https://via.placeholder.com/44'; avatar.style.width='36px'; avatar.style.height='36px'; avatar.style.borderRadius='8px';
+        const name = document.createElement('div'); name.textContent = data.from || 'unknown';
+        left.appendChild(avatar); left.appendChild(name);
+        const actions = document.createElement('div'); actions.className = 'req-actions';
+        const acceptBtn = document.createElement('button'); acceptBtn.className='btn btn-send'; acceptBtn.textContent='Aceitar';
+        const declineBtn = document.createElement('button'); declineBtn.className='btn btn-plain'; declineBtn.textContent='Recusar';
+        actions.appendChild(acceptBtn); actions.appendChild(declineBtn);
+        row.appendChild(left); row.appendChild(actions);
+        requestsList.appendChild(row);
+
+        acceptBtn.addEventListener('click', async ()=>{
+          try{
+            // add each other as friends
+            await db.doc('users/'+currentUser).set({ friends: firebase.firestore.FieldValue.arrayUnion(data.from) }, { merge: true });
+            await db.doc('users/'+data.from).set({ friends: firebase.firestore.FieldValue.arrayUnion(currentUser) }, { merge: true });
+            // update request status
+            await doc.ref.update({ status: 'accepted', respondedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            toast('Amizade aceita!');
+            // update UI immediately
+            row.remove();
+            requestsCount.textContent = String(Math.max(0, Number(requestsCount.textContent)-1));
+            if(requestsCount.textContent === '0') requestsCount.style.display='none';
+            // refresh friends list
+            watchFriends();
+          }catch(e){ console.error('accept err', e); toast('Erro ao aceitar'); }
+        });
+
+        declineBtn.addEventListener('click', async ()=>{
+          try{
+            await doc.ref.update({ status: 'declined', respondedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            row.remove();
+            requestsCount.textContent = String(Math.max(0, Number(requestsCount.textContent)-1));
+            if(requestsCount.textContent === '0') requestsCount.style.display='none';
+            toast('Pedido recusado');
+          }catch(e){ console.error('decline err', e); toast('Erro ao recusar'); }
+        });
+      });
+    }, err=> {
+      console.error('watchRequests err', err);
+    });
+}
+
+btnRequests.addEventListener('click', ()=>{
+  if(!currentUser){ toast('Faça login para ver pedidos'); return; }
+  requestsModal.style.display = 'flex';
+});
+requestsModal.addEventListener('click', (e)=> { if(e.target === requestsModal) requestsModal.style.display='none'; });
+
+/* ========== avatar upload - agora usa Supabase Storage também ========== */
+btnChangeAvatar.addEventListener('click', ()=> profileFile.click());
+profileFile.addEventListener('change', async ()=>{
+  const f = profileFile.files && profileFile.files[0];
+  if(!f || !currentUser) return;
+  try{
+    const local = URL.createObjectURL(f);
+    profileAvatar.src = local;
+
+    const ext = (f.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `avatars/${currentUser}-${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabaseClient.storage.from('project').upload(path, f, { cacheControl: '3600', upsert: true });
+    if(uploadError) throw uploadError;
+
+    const { data } = supabaseClient.storage.from('project').getPublicUrl(path);
+    const url = data.publicUrl;
+
+    await db.doc('users/'+currentUser).set({ avatar: url }, { merge:true });
+
+    profileCache[currentUser] = profileCache[currentUser] || {};
+    profileCache[currentUser].avatar = url;
+    meAvatarLeft.src = url;
+    meAvatarLeft.dataset.user = currentUser;
+    profileAvatar.src = url;
+    updateAllAvatars(currentUser, url);
+
+    URL.revokeObjectURL(local);
+    toast('Avatar salvo');
+  }catch(e){ console.error('avatar upload err', e); toast('Erro ao enviar avatar'); }
+});
+
+/* ========== friends watcher ========== */
+const friendUnsubs = {};
+function watchFriends(){
+  if(!currentUser) return;
+  db.doc('users/' + currentUser).onSnapshot(snap => {
+    friendsList.innerHTML = '';
+    const friends = snap.data()?.friends || [];
+    if(friends.length === 0){
+      friendsList.innerHTML = '<div style="color:var(--muted);padding:8px">Nenhum amigo</div>';
+      return;
+    }
+    friends.forEach(friend => {
+      const key = normalize(friend);
+      if(friendUnsubs[key]) return;
+      friendUnsubs[key] = db.doc('users/' + key)
+        .onSnapshot(fsnap => {
+          if(!fsnap.exists) return;
+          const data = fsnap.data() || {};
+          profileCache[key] = data;
+          const old = friendsList.querySelector(`[data-user="${key}"]`);
+          if(old) old.remove();
+          const node = createFriendNode(key, data);
+          friendsList.appendChild(node);
+          updateAllAvatars(key, data.avatar || '');
+        });
+    });
+  });
+}
+
+function createFriendNode(username, data){
+  const div = document.createElement('div'); div.className='friend'; div.dataset.user = username;
+  const img = document.createElement('img'); img.src = data?.avatar || 'https://via.placeholder.com/44'; img.alt = username; img.dataset.user = username;
+  const info = document.createElement('div'); info.className='meta';
+  const name = document.createElement('div'); name.className='name'; name.textContent = data?.name || username;
+
+  const smallWrap = document.createElement('div'); smallWrap.style.display='flex'; smallWrap.style.alignItems='center';
+  const small = document.createElement('div'); small.className='small'; small.textContent = data?.online ? 'online' : 'offline';
+  const dot = document.createElement('span'); dot.className = 'status-dot ' + (data?.online ? 'status-online' : 'status-offline');
+  smallWrap.appendChild(small); smallWrap.appendChild(dot);
+
+  info.appendChild(name); info.appendChild(smallWrap);
+  div.appendChild(img); div.appendChild(info);
+  div.addEventListener('click', ()=> { openChat(username); layoutRoot.classList.remove('friends-open'); document.getElementById('leftPanel').setAttribute('aria-hidden','true'); });
+  return div;
+}
+
+/* ========== profile fetch helper ========== */
+async function getProfile(u){
+  const id = normalize(u);
+  const snap = await db.doc('users/'+id).get();
+  const data = snap.exists ? snap.data() : { name:id, avatar:'' };
+  profileCache[id] = profileCache[id] || {};
+  profileCache[id].name = data.name || id;
+  profileCache[id].avatar = data.avatar || '';
+  profileCache[id].bio = data.bio || '';
+  profileCache[id].online = data.online || false;
+  profileCache[id].lastSeen = data.lastSeen || null;
+  return profileCache[id];
+}
+
+/* ========== update avatars globally ========== */
+function updateAllAvatars(user, url){
+  const key = normalize(user);
+  const nodes = document.querySelectorAll(`[data-user="${key}"]`);
+  nodes.forEach(n => {
+    if(n.tagName && n.tagName.toLowerCase()==='img') n.src = url;
+    else { const i = n.querySelector && n.querySelector('img'); if(i) i.src = url; }
+  });
+}
+
+/* ========== open chat & listeners (ativa o chat UI) ========== */
+async function openChat(peerRaw){
+  if(!currentUser) return toast('Faça login');
+  const peer = normalize(peerRaw);
+  if(unsubChat){ try{ unsubChat(); }catch(e){} unsubChat=null; }
+  if(unsubPeer){ try{ unsubPeer(); }catch(e){} unsubPeer=null; }
+
+  const pSnap = await db.doc('users/'+peer).get();
+  const pData = pSnap.exists ? pSnap.data() : { name:peer, avatar:'' };
+  profileCache[peer] = profileCache[peer] || {};
+  profileCache[peer].name = pData.name || peer;
+  profileCache[peer].avatar = pData.avatar || '';
+  profileCache[peer].online = pData.online || false;
+  profileCache[peer].lastSeen = pData.lastSeen || null;
+
+  activePeer = peer;
+
+  centerMain.classList.remove('no-active');
+  emptyPlaceholder.style.display = 'none';
+  peerName.textContent = profileCache[peer].name || peer;
+  peerAvatarTop.src = profileCache[peer].avatar || 'https://via.placeholder.com/48';
+  peerAvatarTop.dataset.user = peer;
+  peerAvatarTop.style.display = 'inline-block';
+  peerDotInline.style.display = 'inline-block';
+  peerDotInline.className = 'status-dot ' + (profileCache[peer].online ? 'status-online' : 'status-offline');
+  peerSub.textContent = profileCache[peer].online ? 'online' : (profileCache[peer].lastSeen ? ('visto: '+ new Date(profileCache[peer].lastSeen.seconds*1000).toLocaleString()) : '');
+
+  unsubPeer = db.doc('users/' + peer).onSnapshot(snap=>{
+    if(!snap.exists) return;
+    const d = snap.data() || {};
+    profileCache[peer] = profileCache[peer] || {};
+    profileCache[peer].name = d.name || profileCache[peer].name || peer;
+    profileCache[peer].avatar = d.avatar || profileCache[peer].avatar || '';
+    profileCache[peer].online = d.online || false;
+    profileCache[peer].lastSeen = d.lastSeen || profileCache[peer].lastSeen || null;
+    peerName.textContent = profileCache[peer].name;
+    peerAvatarTop.src = profileCache[peer].avatar || 'https://via.placeholder.com/48';
+    peerSub.textContent = profileCache[peer].online ? 'online' : (profileCache[peer].lastSeen ? ('visto: '+ new Date(profileCache[peer].lastSeen.seconds*1000).toLocaleString()) : '');
+    peerDotInline.className = 'status-dot ' + (profileCache[peer].online ? 'status-online' : 'status-offline');
+    updateAllAvatars(peer, profileCache[peer].avatar || '');
+  });
+
+  const chatId = [currentUser, peer].sort().join('__');
+
+  let firstSnap = true;
+  unsubChat = db.collection('chats').doc(chatId).collection('messages').orderBy('ts')
+    .onSnapshot(async snap=>{
+      messagesEl.innerHTML = '';
+      for(const d of snap.docs){
+        const m = d.data();
+        const author = normalize(m.from);
+        if(author && !profileCache[author]) await getProfile(author);
+        const el = renderMessage(m);
+        messagesEl.appendChild(el);
+      }
+
+      // play sound for added messages (after initial snapshot)
+      snap.docChanges().forEach(ch => {
+        if(ch.type === 'added'){
+          const m = ch.doc.data();
+          const from = normalize(m.from);
+          if(!firstSnap && from !== currentUser){
+            playSendSound(); // incoming
+          }
+        }
+      });
+      firstSnap = false;
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    });
+
+  inputText.disabled = false;
+  btnSend.disabled = true;
+  inputText.value = '';
+  inputText.focus && inputText.focus();
+  updateComposer();
+  setTimeout(()=> messagesEl.scrollTop = messagesEl.scrollHeight, 120);
+}
+
+/* ========== render message (com correção de largura e imagens) ========== */
+function renderMessage(m){
+  const from = normalize(m.from);
+  const isMe = (from === currentUser);
+  const row = document.createElement('div'); row.className = 'msg-row';
+  row.style.justifyContent = isMe ? 'flex-end' : 'flex-start';
+
+  const avatar = document.createElement('img'); avatar.className='msg-avatar'; avatar.dataset.user = from;
+  avatar.src = (m.avatar && m.avatar.trim()) ? m.avatar : (profileCache[from] && profileCache[from].avatar) || 'https://via.placeholder.com/44';
+
+  const bubble = document.createElement('div'); bubble.className = 'msg ' + (isMe ? 'me' : 'their');
+  // inline safety: garantir max-width também via style
+  bubble.style.maxWidth = 'calc(100% - 72px)';
+
+  const meta = document.createElement('div'); meta.className = 'meta';
+  meta.textContent = (profileCache[from] && profileCache[from].name) ? profileCache[from].name : from;
+  bubble.appendChild(meta);
+
+  if(m.text){ const p = document.createElement('div'); p.textContent = m.text; bubble.appendChild(p); }
+  if(m.imageUrl){
+    const img = document.createElement('img');
+    img.className = 'msg-image';
+    img.src = m.imageUrl;
+    img.alt='imagem';
+    img.style.maxWidth = '100%';
+    img.style.height = 'auto';
+    img.addEventListener('click', ()=> window.open(m.imageUrl,'_blank'));
+    bubble.appendChild(img);
+  }
+
+  if(isMe){
+    row.appendChild(bubble);
+    row.appendChild(avatar);
+  } else {
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+  }
+  return row;
+}
+
+/* ========== send text ========== */
+btnSend.addEventListener('click', async ()=>{
+  if(!currentUser || !activePeer) return toast('Selecione um chat e faça login');
+  const text = (inputText.value||'').trim();
+  if(!text) return;
+  const chatId = [currentUser, activePeer].sort().join('__');
+  const avatarForMsg = profileCache[currentUser]?.avatar || '';
+  try{
+    await db.collection('chats').doc(chatId).collection('messages').add({
+      from: currentUser, to: activePeer, text, avatar: avatarForMsg, imageUrl: '', ts: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    playSendSound();
+    inputText.value = '';
+    updateComposer();
+  }catch(e){
+    console.error('send text err', e);
+    toast('Erro ao enviar mensagem');
+  }
+});
+inputText.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); btnSend.click(); }});
+function updateComposer(){ btnSend.disabled = !(currentUser && activePeer && (inputText.value && inputText.value.trim().length>0)); }
+
+/* ========== attach image (Supabase) - preview + upload + insert message ========= */
+btnAttach.addEventListener('click', ()=> {
+  if(!currentUser) return toast('Faça login');
+  if(!activePeer) return toast('Abra um chat');
+  inputFile.click();
+});
+
+inputFile.addEventListener('change', ()=> {
+  const f = inputFile.files && inputFile.files[0];
+  if(!f) return;
+  pendingFileLocal = f;
+  showComposerPreviewSupabase(f);
+});
+
+function clearComposerPreviewSupabase(){ 
+  pendingFileLocal = null; 
+  composerPreview.innerHTML=''; 
+  composerPreview.style.display='none'; 
+  inputFile.value=''; 
+  updateComposer(); 
+}
+
+function showComposerPreviewSupabase(file){
+  composerPreview.innerHTML = '';
+  composerPreview.style.display = 'flex';
+  composerPreview.className = 'preview';
+  const thumb = document.createElement('img'); thumb.src = URL.createObjectURL(file);
+  thumb.style.width = '84px'; thumb.style.height = '84px'; thumb.style.objectFit = 'cover'; thumb.style.borderRadius = '8px';
+  const info = document.createElement('div'); info.style.display='flex'; info.style.flexDirection='column'; info.style.gap='8px'; info.style.marginLeft='10px';
+  const btnConfirm = document.createElement('button'); btnConfirm.className='btn btn-send'; btnConfirm.textContent='Enviar imagem';
+  const btnCancel = document.createElement('button'); btnCancel.className='btn btn-plain'; btnCancel.textContent='Cancelar';
+  const progress = document.createElement('div'); progress.style.width='200px'; progress.style.height='8px'; progress.style.background='#0b0b0b'; progress.style.borderRadius='8px'; progress.style.marginTop='8px'; progress.style.overflow='hidden';
+  const progBar = document.createElement('div'); progBar.style.height='100%'; progBar.style.width='0%'; progBar.style.background='#fff'; progBar.style.transition = 'width .2s linear';
+  progress.appendChild(progBar);
+  info.appendChild(btnConfirm); info.appendChild(btnCancel); info.appendChild(progress);
+  composerPreview.appendChild(thumb); composerPreview.appendChild(info);
+
+  btnCancel.addEventListener('click', ()=> { 
+    try{ URL.revokeObjectURL(thumb.src); }catch(e){}
+    clearComposerPreviewSupabase(); 
+  }, { once: true });
+
+  btnConfirm.addEventListener('click', async ()=>{
+    if(!pendingFileLocal || !currentUser || !activePeer){ toast('Condição inválida'); clearComposerPreviewSupabase(); return; }
+    btnConfirm.disabled = true; btnCancel.disabled = true; btnConfirm.textContent = 'Enviando...';
+    progBar.style.width = '8%'; // visual feedback
+
+    try{
+      const chatId = [currentUser, activePeer].sort().join('__');
+      const ext = (pendingFileLocal.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `chats/${chatId}/${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabaseClient.storage.from('project').upload(path, pendingFileLocal, { cacheControl: '3600', upsert: false });
+      if(uploadError) throw uploadError;
+
+      const { data } = supabaseClient.storage.from('project').getPublicUrl(path);
+      const imageUrl = data?.publicUrl;
+      if(!imageUrl) throw new Error('Não foi possível obter publicUrl do Supabase');
+
+      const avatarForMsg = profileCache[currentUser]?.avatar || '';
+      await db.collection('chats').doc(chatId).collection('messages').add({
+        from: currentUser, to: activePeer, text: '', avatar: avatarForMsg, imageUrl: imageUrl, ts: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      progBar.style.width = '100%';
+      playSendSound();
+      try{ URL.revokeObjectURL(thumb.src); }catch(e){}
+      clearComposerPreviewSupabase();
+    }catch(err){
+      console.error('Erro ao enviar imagem (Supabase):', err);
+      btnConfirm.disabled = false; btnCancel.disabled = false; btnConfirm.textContent = 'Enviar imagem';
+      progBar.style.width = '0%';
+      alert('Erro ao enviar imagem: ' + (err && err.message ? err.message : JSON.stringify(err)));
+    }
+  }, { once: true });
+}
+
+/* ========== Stories (upload + viewer) ========= */
+const STORY_TTL_MS = 120000; // 2 minutes
+
+btnStories.addEventListener('click', ()=> {
+  if(!currentUser){ toast('Faça login para ver stories'); return; }
+  storiesModal.style.display = 'flex';
+  loadActiveStories();
+});
+
+closeStories.addEventListener('click', ()=> storiesModal.style.display = 'none');
+storiesModal.addEventListener('click', (e)=> { if(e.target === storiesModal) storiesModal.style.display='none'; });
+
+btnAddStory.addEventListener('click', ()=> {
+  if(!currentUser){ toast('Faça login'); return; }
+  storyFile.click();
+});
+
+storyFile.addEventListener('change', async ()=>{
+  const f = storyFile.files && storyFile.files[0];
+  if(!f) return;
+  try{
+    const ext = (f.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `stories/${currentUser}/${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabaseClient.storage.from('project').upload(path, f, { cacheControl: '3600', upsert: true });
+    if(uploadError) throw uploadError;
+    const { data } = supabaseClient.storage.from('project').getPublicUrl(path);
+    const imageUrl = data.publicUrl;
+
+    const createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    const expiresAt = firebase.firestore.Timestamp.fromMillis(Date.now() + STORY_TTL_MS);
+    await db.collection('stories').add({ from: currentUser, imageUrl, createdAt, expiresAt });
+
+    toast('Story adicionada (expira em 2 minutos)');
+    storyFile.value = '';
+    loadActiveStories();
+  }catch(e){ console.error('story upload err', e); toast('Erro ao enviar story'); }
+});
+
+async function loadActiveStories(){
+  storiesList.innerHTML = '';
+  const snap = await db.collection('stories').orderBy('createdAt','desc').get();
+  const now = Date.now();
+  const items = [];
+  snap.docs.forEach(d=>{
+    const s = d.data();
+    const until = s.expiresAt ? s.expiresAt.toMillis() : 0;
+    if(until > now){
+      items.push({ id: d.id, ...s, expiresAtMs: until });
+    }
+  });
+
+  if(items.length === 0){
+    storiesList.innerHTML = '<div style="color:var(--muted);padding:8px">Nenhum story ativo</div>';
+    return;
+  }
+
+  items.forEach(st=>{
+    const node = document.createElement('div'); node.className='story-item';
+    const img = document.createElement('img'); img.src = st.imageUrl;
+    const meta = document.createElement('div');
+    const who = document.createElement('div'); who.textContent = st.from;
+    const remain = document.createElement('div'); remain.style.fontSize='12px'; remain.style.color='var(--muted)';
+    const msLeft = st.expiresAtMs - Date.now();
+    remain.textContent = `expira em ${Math.max(0, Math.round(msLeft/1000))}s`;
+    meta.appendChild(who); meta.appendChild(remain);
+    node.appendChild(img); node.appendChild(meta);
+    storiesList.appendChild(node);
+  });
+}
+
+/* optional realtime watcher to refresh stories list periodically */
+function watchStoriesRealtime(){
+  db.collection('stories').onSnapshot(()=> {
+    // refresh if stories modal is open
+    if(storiesModal.style.display === 'flex') loadActiveStories();
+    // Also cleanup expired stories (optional)
+    cleanupExpiredStories();
+  });
+}
+
+async function cleanupExpiredStories(){
+  const snap = await db.collection('stories').get();
+  const now = Date.now();
+  snap.docs.forEach(async d=>{
+    const s = d.data();
+    const until = s.expiresAt ? s.expiresAt.toMillis() : 0;
+    if(until <= now){
+      try{ await d.ref.delete(); }catch(e){ /* ignore */ }
+    }
+  });
+}
+
+/* ========== requests watcher start placeholder ========== */
+function startRequestsIfNeeded(){ if(currentUser) watchRequests(); }
+
+/* ========== debug exposure ========== */
+window.openChat = openChat;
+window.getProfile = getProfile;
+window.db = db;
+window.supabaseClient = supabaseClient;
+
+/* initial UI state */
+centerMain.classList.add('no-active');
+emptyPlaceholder.style.display = 'flex';
+messagesEl.innerHTML = '';
+inputText.disabled = true;
+btnSend.disabled = true;
+
+setInterval(updateComposer,300);
+inputText.addEventListener('focus', ()=> setTimeout(()=> messagesEl.scrollTop = messagesEl.scrollHeight, 200));
+</script>
+</body>
+</html>
