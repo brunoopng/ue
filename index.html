@@ -1,576 +1,213 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Project</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Funcional Firebase</title>
 <style>
-/* ---------- visual (mantive o estilo minimal/preto e branco) ---------- */
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#0E0E11;color:#EDEDED;transition:.2s}
-body.light{background:#fff;color:#111}
-
-/* NAV */
-nav{
-  position:fixed;top:0;width:100%;height:60px;display:flex;align-items:center;
-  padding:0 16px;z-index:1000;background:#0E0E11;
-}
-body.light nav{background:#fff}
-#open-menu{font-size:1.6rem;cursor:pointer;margin-right:12px;user-select:none}
-nav h1{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;cursor:pointer;margin-right:12px}
-nav input{
-  margin-left:6px;flex:1;max-width:320px;padding:8px 12px;border-radius:12px;
-  border:1px solid #555;background:#1C1C1C;color:#fff;outline:none;
-}
-body.light nav input{background:#f2f2f2;color:#111;border:1px solid #ccc}
-nav input::placeholder{color:#999}
-
-/* GEAR */
-#theme-gear{position:absolute;right:20px;font-size:1.4rem;cursor:pointer;user-select:none}
-#theme-menu{display:none;position:absolute;top:120%;right:0;background:#18181F;border-radius:10px;overflow:hidden}
-#theme-menu button{padding:8px 12px;background:none;border:none;color:#fff;width:100%;text-align:left;cursor:pointer}
-body.light #theme-menu button{color:#111}
-
-/* MAIN */
-main{padding-top:80px;padding-bottom:60px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px;padding-left:16px;padding-right:16px}
-
-/* CARDS */
-.card{position:relative;border-radius:12px;overflow:hidden;background:#18181F;cursor:pointer;transition:.2s;padding:0}
-.card img{width:100%;height:220px;object-fit:cover;display:block;border-radius:12px}
-
-/* SIDE MENU */
-#side-menu{
-  position:fixed;top:0;right:-360px;width:360px;height:100%;background:#0B0B0C;color:#fff;
-  box-shadow:-2px 0 24px rgba(0,0,0,.6);z-index:1500;padding:22px;display:flex;flex-direction:column;gap:12px;transition:right .28s cubic-bezier(.2,.9,.2,1);
-  border-top-left-radius:14px;border-bottom-left-radius:14px;
-}
-#side-menu.open{right:0}
-.close-menu{align-self:flex-end;font-size:1.6rem;background:none;border:none;color:#fff;cursor:pointer}
-.profile{text-align:center}
-.profile img{width:88px;height:88px;border-radius:50%;object-fit:cover;border:2px solid #222;background:#111;padding:2px}
-.profile h2{font-size:1.05rem;font-weight:700;margin-top:8px}
-.small-muted{font-size:.82rem;color:#9a9a9a}
-
-/* Friends */
-.friends-section h4{font-size:.72rem;color:#9a9a9a;letter-spacing:1px;margin-bottom:8px}
-#friends-list{display:flex;flex-direction:column;gap:8px}
-.friend-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));cursor:pointer}
-.friend-card img{width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid #222}
-.friend-name{font-size:.95rem;color:#e6e6e6}
-
-/* Requests */
-#requests-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
-.request-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px;border-radius:10px;background:#0F0F10;border:1px solid #151515}
-.req-left{display:flex;align-items:center;gap:10px}
-.req-actions button{margin-left:6px;padding:6px 8px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
-.req-accept{background:#1f8a42;color:#fff}
-.req-decline{background:transparent;border:1px solid #333;color:#ddd}
-
-/* MODALS */
-#login-modal,#friend-profile-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;align-items:center;justify-content:center}
-.modal-content{background:#080809;padding:18px;border-radius:12px;color:#fff;width:320px}
-.modal-content input{width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#0b0b0c;color:#fff;margin-bottom:10px}
-.modal-content button{padding:10px;border-radius:10px;border:none;background:#222;color:#fff;cursor:pointer;width:100%}
-
-/* small responsive */
-@media (max-width:720px){
-  main{grid-template-columns:1fr}
-  #side-menu{width:92%}
-}
+body{margin:0;font-family:sans-serif;background:#0e0e11;color:#eee;display:flex;height:100vh}
+.sidebar{width:300px;background:#111;padding:20px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+.main{flex:1;background:#0d0d0d;padding:20px;display:flex;flex-direction:column}
+button{padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-weight:600}
+.friend, .request{padding:8px;border-radius:8px;background:#222;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;cursor:pointer}
+.friend:hover,.request:hover{background:#333}
+.msg{padding:6px 10px;border-radius:10px;margin-bottom:6px;max-width:60%}
+.msg.me{background:#1f8a42;margin-left:auto;color:#fff}
+.msg.their{background:#333;margin-right:auto;color:#fff}
+#msg-input{flex:1;padding:8px;border-radius:8px;border:none;background:#222;color:#eee;margin-right:6px}
+.composer{display:flex;margin-top:auto;gap:6px}
 </style>
 </head>
 <body>
 
-<nav>
-  <div id="open-menu" title="Abrir menu"></div>
-  <h1 id="brand">Project</h1>
-  <input id="search" placeholder="Buscar jogos (ex: Zelda, FIFA)..." autocomplete="off">
-  <div id="theme-gear" title="Tema">
-    <div id="theme-menu">
-      <button data-theme="light">Claro</button>
-      <button data-theme="dark">Escuro</button>
-    </div>
-  </div>
-  <div style="position:relative;right:400px"></div>
-</nav>
-
-<main id="main"></main>
-
-<!-- detail page (image) -->
-<div id="detail-page" style="display:none;padding:20px;">
-  <img id="detail-img" src="" style="width:100%;max-height:70vh;object-fit:contain;border-radius:12px;margin-bottom:12px">
-  <p id="detail-desc" style="color:#ccc"></p>
+<div class="sidebar">
+  <h2>Usuário: <span id="me-name">Convidado</span></h2>
+  <button id="btn-login">Login</button>
+  <button id="btn-logout" style="display:none">Logout</button>
+  <hr>
+  <button id="btn-add-friend">Adicionar amigo</button>
+  <h3>Amigos</h3>
+  <div id="friends-list"></div>
+  <h3>Solicitações</h3>
+  <div id="requests-list"></div>
 </div>
 
-<!-- login modal -->
-<div id="login-modal">
-  <div class="modal-content">
-    <h3 style="margin-bottom:8px">Entrar (username)</h3>
-    <input id="login-input" placeholder="Seu username (exato)">
-    <button id="login-save">Entrar</button>
+<div class="main">
+  <h2 id="chat-with">Nenhum chat selecionado</h2>
+  <div id="chat-messages" style="flex:1;overflow:auto;margin-bottom:12px"></div>
+  <div class="composer">
+    <input type="text" id="msg-input" placeholder="Digite mensagem..." disabled>
+    <button id="send-btn" disabled>Enviar</button>
   </div>
 </div>
 
-<!-- friend profile modal -->
-<div id="friend-profile-modal">
-  <div class="modal-content" style="text-align:center">
-    <img id="fp-avatar" src="https://via.placeholder.com/90" width="90" height="90" style="border-radius:50%;margin-bottom:8px">
-    <h3 id="fp-name">Nome</h3>
-    <p id="fp-bio" class="small-muted">Bio</p>
-    <div style="margin-top:12px">
-      <button id="fp-close" style="width:100%">Fechar</button>
-    </div>
+<!-- login prompt simples -->
+<div id="login-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center">
+  <div style="background:#222;padding:20px;border-radius:10px;display:flex;flex-direction:column;gap:8px">
+    <input id="login-username" placeholder="Seu username" style="padding:8px;border-radius:6px;border:none;background:#111;color:#eee">
+    <button id="login-ok">Entrar</button>
   </div>
 </div>
 
-<!-- side menu -->
-<div id="side-menu" aria-hidden="true">
-  <button class="close-menu" title="Fechar">&times;</button>
-
-  <div class="profile">
-    <img id="profile-pic" src="https://via.placeholder.com/88" alt="avatar">
-    <h2 id="profile-name">Convidado</h2>
-    <div id="profile-bio-mini" class="small-muted">Sem bio</div>
-  </div>
-
-  <div style="display:flex;gap:8px">
-    <button id="menu-login-btn" class="modal-content" style="background:#222;color:#fff;border-radius:10px;padding:10px;width:100%">Login</button>
-    <button id="logout-btn" class="modal-content" style="display:none;background:#151515;color:#fff;border-radius:10px;padding:10px;width:100%">Sair</button>
-  </div>
-
-  <div class="friends-section" style="margin-top:12px">
-    <h4>AMIGOS</h4>
-    <div id="friends-list" style="min-height:48px"></div>
-
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <button id="open-add-friend" class="modal-content" style="flex:1;background:#222">Adicionar</button>
-      <button id="open-requests" class="modal-content" style="flex:1;background:#151515">Solicitações</button>
-    </div>
-
-    <div id="requests-list" style="margin-top:12px;display:none"></div>
-  </div>
-</div>
-
-<!-- autocomplete suggestions -->
-<div class="autocomplete-suggestions" id="suggestions" style="display:none;position:fixed;top:62px;left:16px;right:16px;z-index:1200;background:#18181F;border-radius:12px;padding:8px;max-height:260px;overflow:auto"></div>
-
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 <script>
-/* ---------- UI + RAWG (non-module) ---------- */
-const API_KEY = 'bfd4ae3a6ba14d47a3c627bad684acd8';
-const openMenu = document.getElementById('open-menu');
-const sideMenu = document.getElementById('side-menu');
-const closeMenuBtn = sideMenu.querySelector('.close-menu');
-const themeGear = document.getElementById('theme-gear');
-const themeMenu = document.getElementById('theme-menu');
-const searchInput = document.getElementById('search');
-const suggestionsDiv = document.getElementById('suggestions');
-const main = document.getElementById('main');
-const detailPage = document.getElementById('detail-page');
-const detailImg = document.getElementById('detail-img');
-const detailDesc = document.getElementById('detail-desc');
+const firebaseConfig = {
+  apiKey: "AIzaSyBKotEIdaCZbPs3e6cX-0Pnlfa9pqomJ5o",
+  authDomain: "chat-36f52.firebaseapp.com",
+  projectId: "chat-36f52",
+  storageBucket: "chat-36f52.firebasestorage.app",
+  messagingSenderId: "613319905986",
+  appId: "1:613319905986:web:1a66837932a040e766e15b",
+  measurementId: "G-11C0W35NQ7"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-const menuLoginBtn = document.getElementById('menu-login-btn');
+// elementos
+const btnLogin = document.getElementById('btn-login');
+const btnLogout = document.getElementById('btn-logout');
 const loginModal = document.getElementById('login-modal');
-const loginSave = document.getElementById('login-save');
-const loginInput = document.getElementById('login-input');
-const logoutBtn = document.getElementById('logout-btn');
+const loginOk = document.getElementById('login-ok');
+const loginUsername = document.getElementById('login-username');
+const meNameEl = document.getElementById('me-name');
 
-const openAddFriendBtn = document.getElementById('open-add-friend');
-const openRequestsBtn = document.getElementById('open-requests');
+const btnAddFriend = document.getElementById('btn-add-friend');
+const friendsListEl = document.getElementById('friends-list');
 const requestsListEl = document.getElementById('requests-list');
 
-const friendsListEl = document.getElementById('friends-list');
-
-const friendProfileModal = document.getElementById('friend-profile-modal');
-const fpAvatar = document.getElementById('fp-avatar');
-const fpName = document.getElementById('fp-name');
-const fpBio = document.getElementById('fp-bio');
-const fpClose = document.getElementById('fp-close');
-
-const profileNameEl = document.getElementById('profile-name');
-const profilePicEl = document.getElementById('profile-pic');
-const profileBioMini = document.getElementById('profile-bio-mini');
-
-openMenu.addEventListener('click', ()=> {
-  sideMenu.classList.add('open');
-  sideMenu.setAttribute('aria-hidden','false');
-});
-closeMenuBtn.addEventListener('click', ()=> {
-  sideMenu.classList.remove('open');
-  sideMenu.setAttribute('aria-hidden','true');
-});
-
-// theme gear
-themeGear.addEventListener('click', ()=>{
-  themeMenu.style.display = themeMenu.style.display === 'block' ? 'none' : 'block';
-});
-themeMenu.querySelectorAll('button').forEach(btn=>{
-  btn.addEventListener('click', ()=> {
-    if(btn.dataset.theme === 'light') document.body.classList.add('light');
-    else document.body.classList.remove('light');
-    themeMenu.style.display = 'none';
-  });
-});
-
-// login modal open
-menuLoginBtn.addEventListener('click', ()=> loginModal.style.display = 'flex');
-logoutBtn.addEventListener('click', async ()=>{
-  // simply clear UI state (Firebase state handled in module)
-  profileNameEl.textContent = 'Convidado';
-  profilePicEl.src = 'https://via.placeholder.com/88';
-  profileBioMini.textContent = 'Sem bio';
-  logoutBtn.style.display = 'none';
-  menuLoginBtn.style.display = 'inline-block';
-  // dispatch signout event for firebase module to cleanup
-  window.dispatchEvent(new Event('app:signout'));
-});
-
-// add friend prompt (dispatch to module)
-openAddFriendBtn.addEventListener('click', async ()=>{
-  const name = prompt('Digite o username exato do amigo:');
-  if(!name) return;
-  window.dispatchEvent(new CustomEvent('app:addFriendRequest', { detail: { to: name } }));
-});
-
-// toggle requests pane
-openRequestsBtn.addEventListener('click', ()=> {
-  requestsListEl.style.display = requestsListEl.style.display === 'block' ? 'none' : 'block';
-});
-
-// friend profile modal
-fpClose.addEventListener('click', ()=> friendProfileModal.style.display = 'none');
-friendProfileModal.addEventListener('click', (e)=> { if(e.target===friendProfileModal) friendProfileModal.style.display = 'none' });
-
-// back to main
-document.getElementById('brand').addEventListener('click', ()=>{
-  detailPage.style.display = 'none';
-  main.style.display = 'grid';
-  searchInput.value = '';
-  suggestionsDiv.style.display = 'none';
-  renderGames([]);
-});
-
-/* RAWG search + render (keeps your old behavior) */
-function debounce(fn, ms=300){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
-
-async function fetchGames(query) {
-  try {
-    const res = await fetch(`https://api.rawg.io/api/games?key=${API_KEY}&search=${encodeURIComponent(query)}&page_size=10`);
-    const data = await res.json();
-    return data.results || [];
-  } catch(e){
-    console.error('RAWG error', e);
-    return [];
-  }
-}
-
-searchInput.addEventListener('input', debounce(async ()=>{
-  const q = searchInput.value.trim();
-  suggestionsDiv.innerHTML = '';
-  if(!q){ suggestionsDiv.style.display='none'; return; }
-  suggestionsDiv.style.display = 'block';
-  const loading = document.createElement('div'); loading.textContent = 'Carregando...'; loading.style.color='#ccc';
-  suggestionsDiv.appendChild(loading);
-
-  const games = await fetchGames(q);
-  suggestionsDiv.innerHTML = '';
-  if(!games.length){ const none=document.createElement('div'); none.textContent='Nenhum resultado'; none.style.color='#999'; suggestionsDiv.appendChild(none); return; }
-  games.forEach(g=>{
-    const el = document.createElement('div'); el.className='suggestion'; el.style.padding='8px'; el.style.display='flex'; el.style.gap='8px'; el.style.alignItems='center'; el.style.cursor='pointer';
-    const img = document.createElement('img'); img.src = g.background_image || 'https://via.placeholder.com/40'; img.style.width='40px'; img.style.height='40px'; img.style.objectFit='cover'; img.style.borderRadius='6px';
-    const span = document.createElement('span'); span.textContent = g.name;
-    el.appendChild(img); el.appendChild(span);
-    el.addEventListener('click', ()=> {
-      searchInput.value = g.name;
-      suggestionsDiv.style.display = 'none';
-      renderGames([ { name: g.name, desc: g.released || '', img: g.background_image || '' } ]);
-    });
-    suggestionsDiv.appendChild(el);
-  });
-}), 250);
-
-function renderGames(custom=[]){
-  main.innerHTML = '';
-  let games = custom.length ? custom : [];
-  if(!games.length){
-    const none = document.createElement('div'); none.className = 'small-muted'; none.textContent = 'Nenhum jogo carregado. Busque pelo campo acima.';
-    none.style.padding = '12px';
-    main.appendChild(none);
-    return;
-  }
-  games.forEach(g=>{
-    const card = document.createElement('div'); card.className = 'card';
-    const img = document.createElement('img'); img.src = g.img || 'https://via.placeholder.com/480x220';
-    card.appendChild(img);
-    card.addEventListener('click', ()=>{
-      detailPage.style.display = 'block';
-      main.style.display = 'none';
-      detailImg.src = g.img || 'https://via.placeholder.com/480x220';
-      detailDesc.textContent = g.desc || '';
-    });
-    main.appendChild(card);
-  });
-}
-
-/* initial empty render */
-renderGames([]);
-</script>
-
-<!-- FIREBASE MODULE -->
-<script type="module">
-/* Firebase modular (v10) */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-app.js";
-import {
-  getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove,
-  collection, addDoc, query, where, getDocs, onSnapshot, deleteDoc, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
-
-/* Use the config you provided (adjust if needed) */
-const firebaseConfig = {
-  apiKey: "AIzaSyCDsIWhMHMRePqWHPVgaTWaEIVfWNVeMQo",
-  authDomain: "project-6787c.firebaseapp.com",
-  projectId: "project-6787c",
-  storageBucket: "project-6787c.firebasestorage.app",
-  messagingSenderId: "603584412230",
-  appId: "1:603584412230:web:46d41b1081a99aed8a2847",
-  measurementId: "G-PW0743QWMJ"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-/* UI refs (from outer scope) */
-const loginModalEl = document.getElementById('login-modal');
-const loginSaveBtn = document.getElementById('login-save');
-const loginInputEl = document.getElementById('login-input');
-const menuLoginBtnEl = document.getElementById('menu-login-btn');
-const logoutBtnEl = document.getElementById('logout-btn');
-const profileNameEl = document.getElementById('profile-name');
-const profilePicEl = document.getElementById('profile-pic');
-const profileBioMiniEl = document.getElementById('profile-bio-mini');
+const chatWithEl = document.getElementById('chat-with');
+const chatMessagesEl = document.getElementById('chat-messages');
+const msgInput = document.getElementById('msg-input');
+const sendBtn = document.getElementById('send-btn');
 
 let currentUser = null;
-let userUnsub = null;
-let requestsUnsub = null;
+let activeChatPeer = null;
+let chatUnsub = null;
 
-/* safe helper */
-function safeText(s){ return (s||'').toString(); }
+// funções
+function normalize(u){return u.trim().toLowerCase()}
+function toast(m){alert(m)}
 
-/* create-or-get user on login */
-async function ensureUserDoc(username){
-  const ref = doc(db, 'users', username);
-  const snap = await getDoc(ref);
-  if(!snap.exists()){
-    await setDoc(ref, {
-      name: username,
-      bio: '',
-      avatar: 'https://via.placeholder.com/90',
-      friends: []
-    }, { merge: true });
-    return (await getDoc(ref));
+// login
+btnLogin.onclick = ()=>{loginModal.style.display='flex'}
+loginOk.onclick = async ()=>{
+  const uname = normalize(loginUsername.value)
+  if(!uname){toast('Digite username'); return;}
+  const userRef = db.doc('users/'+uname)
+  const snap = await userRef.get()
+  if(!snap.exists){
+    await userRef.set({friends:[],name:uname})
   }
-  return snap;
+  currentUser = uname
+  meNameEl.textContent = currentUser
+  loginModal.style.display='none'
+  btnLogin.style.display='none'
+  btnLogout.style.display='inline-block'
+  watchFriends()
+  watchRequests()
 }
 
-/* login handler */
-loginSaveBtn.addEventListener('click', async ()=> {
-  const username = loginInputEl.value.trim();
-  if(!username){ alert('Digite um username'); return; }
-  loginSaveBtn.disabled = true;
-  loginSaveBtn.textContent = 'Entrando...';
-  try{
-    const snap = await ensureUserDoc(username);
-    currentUser = username;
-    // update UI
-    profileNameEl.textContent = username;
-    profilePicEl.src = snap.data().avatar || 'https://via.placeholder.com/90';
-    profileBioMiniEl.textContent = snap.data().bio || 'Sem bio';
-    menuLoginBtnEl.style.display = 'none';
-    logoutBtnEl.style.display = 'inline-block';
-    loginModalEl.style.display = 'none';
-    loginInputEl.value = '';
-    // attach realtime listeners
-    attachUserListeners();
-    // load initial lists
-    loadFriendsOnce();
-    // start watching incoming requests realtime
-    watchIncomingRequestsRealtime();
-    alert('Logado como ' + username);
-  }catch(e){
-    console.error(e);
-    alert('Erro ao logar. Veja console.');
-  }finally{
-    loginSaveBtn.disabled = false;
-    loginSaveBtn.textContent = 'Entrar';
-  }
-});
-
-/* signout cleanup */
-window.addEventListener('app:signout', ()=>{
-  currentUser = null;
-  if(userUnsub) userUnsub(); userUnsub = null;
-  if(requestsUnsub) requestsUnsub(); requestsUnsub = null;
-});
-
-/* attach realtime for user doc (friends/bio/avatar changes) */
-function attachUserListeners(){
-  if(!currentUser) return;
-  const uref = doc(db,'users', currentUser);
-  if(userUnsub) userUnsub();
-  userUnsub = onSnapshot(uref, snap=>{
-    if(!snap.exists()) return;
-    const data = snap.data();
-    profileNameEl.textContent = data.name || currentUser;
-    profilePicEl.src = data.avatar || 'https://via.placeholder.com/90';
-    profileBioMiniEl.textContent = data.bio || 'Sem bio';
-    renderFriends(data.friends || []);
-  });
+// logout
+btnLogout.onclick = ()=>{
+  if(chatUnsub) chatUnsub()
+  currentUser = null
+  activeChatPeer = null
+  meNameEl.textContent='Convidado'
+  friendsListEl.innerHTML=''
+  requestsListEl.innerHTML=''
+  chatMessagesEl.innerHTML=''
+  btnLogin.style.display='inline-block'
+  btnLogout.style.display='none'
+  msgInput.disabled = true
+  sendBtn.disabled = true
 }
 
-/* render friends (called by listener) */
-async function renderFriends(friends){
-  const friendsListEl = document.getElementById('friends-list');
-  while(friendsListEl.firstChild) friendsListEl.removeChild(friendsListEl.firstChild);
-  if(!friends || friends.length === 0){
-    const none = document.createElement('div'); none.className = 'small-muted'; none.textContent = 'Nenhum amigo ainda'; friendsListEl.appendChild(none); return;
-  }
-  for(const fname of friends){
-    try{
-      const fsnap = await getDoc(doc(db,'users',fname));
-      if(!fsnap.exists()) continue;
-      const f = fsnap.data();
-      const card = document.createElement('div'); card.className = 'friend-card';
-      card.innerHTML = `<img src="${f.avatar||'https://via.placeholder.com/90'}"><div class="friend-name">${f.name}</div>`;
-      card.addEventListener('click', ()=> showFriendProfile(f));
-      friendsListEl.appendChild(card);
-    }catch(e){ console.error('friend render error', e); }
-  }
+// adicionar amigo
+btnAddFriend.onclick = async ()=>{
+  if(!currentUser) return toast('Faça login')
+  const friend = normalize(prompt('Username do amigo'))
+  if(!friend) return
+  if(friend===currentUser) return toast('Não pode adicionar você mesmo')
+  const fRef = db.doc('users/'+friend)
+  const fsnap = await fRef.get()
+  if(!fsnap.exists) return toast('Usuário não encontrado')
+  await db.collection('friendRequests').add({from:currentUser,to:friend,status:'pending'})
+  toast('Solicitação enviada')
 }
 
-/* load friends once (for initial load) */
-async function loadFriendsOnce(){
-  if(!currentUser) return;
-  try{
-    const snap = await getDoc(doc(db,'users', currentUser));
-    if(!snap.exists()) return;
-    const data = snap.data();
-    renderFriends(data.friends || []);
-  }catch(e){ console.error(e); }
+// watch friends
+function watchFriends(){
+  if(!currentUser) return
+  db.doc('users/'+currentUser).onSnapshot(snap=>{
+    friendsListEl.innerHTML=''
+    const data = snap.data()
+    const friends = data.friends || []
+    if(friends.length===0){friendsListEl.innerHTML='<i>Nenhum amigo</i>'; return;}
+    friends.forEach(async f=>{
+      const fSnap = await db.doc('users/'+f).get()
+      const fData = fSnap.exists ? fSnap.data() : {name:f}
+      const div = document.createElement('div'); div.className='friend'; div.textContent=fData.name
+      div.onclick = ()=>openChat(fData.name)
+      friendsListEl.appendChild(div)
+    })
+  })
 }
 
-/* show friend profile modal */
-function showFriendProfile(data){
-  fpAvatar.src = data.avatar || 'https://via.placeholder.com/90';
-  fpName.textContent = safeText(data.name);
-  fpBio.textContent = data.bio || 'Sem bio';
-  friendProfileModal.style.display = 'flex';
+// watch requests
+function watchRequests(){
+  if(!currentUser) return
+  db.collection('friendRequests').where('to','==',currentUser).where('status','==','pending')
+    .onSnapshot(snap=>{
+      requestsListEl.innerHTML=''
+      if(snap.empty){requestsListEl.innerHTML='<i>Nenhuma solicitação</i>'; return;}
+      snap.docs.forEach(async d=>{
+        const r = d.data(); const id=d.id
+        const div = document.createElement('div'); div.className='request'
+        div.innerHTML=`${r.from} <button id="accept">✔</button><button id="decline">✖</button>`
+        div.querySelector('#accept').onclick=async ()=>{
+          await db.doc('users/'+currentUser).update({friends:firebase.firestore.FieldValue.arrayUnion(r.from)})
+          await db.doc('users/'+r.from).update({friends:firebase.firestore.FieldValue.arrayUnion(currentUser)})
+          await db.doc('friendRequests/'+id).delete()
+        }
+        div.querySelector('#decline').onclick=async ()=>{await db.doc('friendRequests/'+id).delete()}
+        requestsListEl.appendChild(div)
+      })
+    })
 }
 
-/* ---------- FRIEND REQUESTS ---------- */
-
-/* sending a request */
-window.addEventListener('app:addFriendRequest', async (e)=>{
-  const to = e.detail?.to;
-  if(!to) return alert('Nome inválido');
-  if(!currentUser) return alert('Você precisa logar para adicionar amigos');
-  if(to === currentUser) return alert('Você não pode adicionar você mesmo.');
-  try{
-    // check recipient exists
-    const tref = doc(db,'users', to);
-    const tsnap = await getDoc(tref);
-    if(!tsnap.exists()) { alert('Usuário não encontrado'); return; }
-    // check already friends
-    const meSnap = await getDoc(doc(db,'users', currentUser));
-    const meData = meSnap.exists() ? meSnap.data() : {};
-    if((meData.friends||[]).includes(to)) { alert('Já é seu amigo'); return; }
-    // check existing request: from currentUser -> to OR from to -> currentUser (avoid duplicates)
-    const q1 = query(collection(db,'friendRequests'), where('from','==',currentUser), where('to','==',to));
-    const q2 = query(collection(db,'friendRequests'), where('from','==',to), where('to','==',currentUser));
-    const s1 = await getDocs(q1); if(!s1.empty){ alert('Pedido já enviado'); return; }
-    const s2 = await getDocs(q2); if(!s2.empty){ alert('Esse usuário já te enviou solicitação — verifique em Solicitações'); return; }
-    // create request doc
-    await addDoc(collection(db,'friendRequests'), {
-      from: currentUser,
-      to,
-      status: 'pending',
-      createdAt: serverTimestamp()
-    });
-    alert('Solicitação enviada!');
-  }catch(err){
-    console.error(err); alert('Erro ao enviar solicitação');
-  }
-});
-
-/* watch incoming requests realtime for "to == currentUser" */
-function watchIncomingRequestsRealtime(){
-  if(!currentUser) return;
-  if(requestsUnsub) requestsUnsub();
-  const q = query(collection(db,'friendRequests'), where('to','==', currentUser), where('status','==','pending'));
-  requestsUnsub = onSnapshot(q, async snapshot=>{
-    const arr = snapshot.docs.map(d=>({ id: d.id, ...d.data() }));
-    renderRequests(arr);
-  });
+// chat
+function openChat(peer){
+  if(chatUnsub) chatUnsub()
+  activeChatPeer = peer
+  chatWithEl.textContent = 'Chat com '+peer
+  msgInput.disabled = false; sendBtn.disabled = false
+  const chatId = [currentUser,peer].sort().join('__')
+  chatUnsub = db.collection('chats').doc(chatId).collection('messages').orderBy('ts').onSnapshot(snap=>{
+    chatMessagesEl.innerHTML=''
+    snap.docs.forEach(d=>{
+      const m = d.data()
+      const div = document.createElement('div')
+      div.className='msg '+(m.from===currentUser?'me':'their')
+      div.textContent = m.from+': '+m.text
+      chatMessagesEl.appendChild(div)
+    })
+    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight
+  })
 }
 
-/* render incoming requests list (UI) */
-async function renderRequests(list){
-  const el = document.getElementById('requests-list');
-  while(el.firstChild) el.removeChild(el.firstChild);
-  if(!list || list.length === 0){
-    const none = document.createElement('div'); none.className = 'small-muted'; none.textContent = 'Nenhuma solicitação'; el.appendChild(none); return;
-  }
-  for(const req of list){
-    const from = req.from;
-    const fsnap = await getDoc(doc(db,'users',from));
-    const fdata = fsnap.exists() ? fsnap.data() : { name: from, avatar: 'https://via.placeholder.com/90' };
-    const card = document.createElement('div'); card.className = 'request-card';
-    card.innerHTML = `
-      <div class="req-left">
-        <img src="${fdata.avatar}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:1px solid #111">
-        <div>
-          <div style="font-weight:700">${fdata.name}</div>
-          <div style="font-size:.82rem;color:#9b9b9b">pediu amizade</div>
-        </div>
-      </div>
-      <div class="req-actions">
-        <button class="req-accept">Aceitar</button>
-        <button class="req-decline">Recusar</button>
-      </div>
-    `;
-    card.querySelector('.req-accept').addEventListener('click', async ()=>{
-      try{
-        // add each other
-        await updateDoc(doc(db,'users',currentUser), { friends: arrayUnion(from) });
-        await updateDoc(doc(db,'users',from), { friends: arrayUnion(currentUser) });
-        // delete the request doc
-        await deleteDoc(doc(db,'friendRequests', req.id));
-        // UI will update by realtime listeners
-      }catch(err){ console.error(err); alert('Erro ao aceitar'); }
-    });
-    card.querySelector('.req-decline').addEventListener('click', async ()=>{
-      try{
-        await deleteDoc(doc(db,'friendRequests', req.id));
-      }catch(err){ console.error(err); alert('Erro ao recusar'); }
-    });
-    el.appendChild(card);
-  }
+// send message
+sendBtn.onclick=async ()=>{
+  const text = msgInput.value.trim()
+  if(!text) return
+  const chatId = [currentUser,activeChatPeer].sort().join('__')
+  await db.collection('chats').doc(chatId).collection('messages').add({
+    from:currentUser,to:activeChatPeer,text,ts:firebase.firestore.FieldValue.serverTimestamp()
+  })
+  msgInput.value=''
 }
 
-/* initial check if user was already set in UI (rare) */
-(async ()=>{
-  // nothing saved locally; user must login manually
-})();
-
-/* export watch function so UI can call when login completes */
-window.__app = {
-  onLogin: async (username)=>{
-    currentUser = username;
-    attachUserListeners();
-    watchIncomingRequestsRealtime();
-    await loadFriendsOnce();
-  }
-};
+msgInput.addEventListener('keydown',(e)=>{if(e.key==='Enter') sendBtn.click()})
 </script>
 
 </body>
