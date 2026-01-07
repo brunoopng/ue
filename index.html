@@ -3,40 +3,83 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>Project ó Chat (imagem: enviar/receber)</title>
+<title>Project ‚Äî Chat</title>
 <style>
 :root{
-  --bg:#0b0b0b; --card:#0e0e0e; --muted:#bdbdbd; --white:#ffffff;
-  --online:#1f8a42; --offline:#777; --radius:12px; --header-h:64px;
+  --bg:#0b0b0b; --card:#0f1012; --muted:#9b9b9b; --white:#ffffff;
+  --accent:#ffffff;
+  --radius:12px; --header-h:64px;
+  --glass: rgba(255,255,255,0.04);
+  --fade-duration: 360ms;
+  --splash-bg: #000000;
+  --brand-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
-html,body{height:100%;margin:0;background:var(--bg);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--white);-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);font-family:var(--brand-font);color:var(--white);-webkit-font-smoothing:antialiased}
 .app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:linear-gradient(180deg,var(--card),#090909);border-bottom:1px solid rgba(255,255,255,0.03);z-index:40}
 .brand{display:flex;align-items:center;gap:12px}
-.brand svg{width:24px;height:24px}
-.brand .title{font-weight:700;letter-spacing:0.3px}
-.top-actions{display:flex;gap:8px;align-items:center}
+.brand svg{width:28px;height:28px}
+.brand .title{font-weight:700;letter-spacing:0.6px;font-size:16px}
+.top-actions{display:flex;gap:10px;align-items:center}
 
-.layout{display:flex;flex:1;min-height:0;transition:all .36s cubic-bezier(.2,.9,.2,1)}
-.left{width:36%;max-width:420px;min-width:260px;background:var(--card);padding:16px;box-sizing:border-box;border-right:1px solid rgba(255,255,255,0.03);transform:translateX(-110%);opacity:0;pointer-events:none;position:relative;z-index:60;transition:transform .28s ease,opacity .28s ease}
-.layout.friends-open .left{transform:translateX(0);opacity:1;pointer-events:auto}
-.left .close-btn{margin-left:auto;background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:18px}
-.me{display:flex;gap:12px;align-items:center;margin-top:8px}
-.me img{width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,0.03)}
-.me .name{font-weight:700}
-.section-title{font-size:.86rem;color:var(--muted);margin-top:8px;margin-bottom:6px}
-.friends-list{overflow:auto;flex:1;padding-right:6px}
+/* icon button consistent */
+.icon-btn{
+  width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--white);border-radius:10px;border:1px solid var(--glass);cursor:pointer;padding:6px;-webkit-tap-highlight-color: transparent;user-select:none}
+.icon-btn svg{display:block}
+.icon-btn:hover{ background: rgba(255,255,255,0.03); transform: translateY(-2px); transition: transform .12s;}
+
+/* header small white action (for add friend) */
+.btn-header{
+  display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:#ffffff;color:#050505;border:none;font-weight:700;font-size:13px;cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,0.25);
+}
+.btn-header svg{opacity:0.9}
+.btn-header:active{transform:translateY(1px)}
+
+/* layout */
+.layout{display:flex;flex:1;min-height:0;transition:all var(--fade-duration) cubic-bezier(.2,.9,.2,1)}
+.left{width:36%;max-width:420px;min-width:260px;background:var(--card);padding:16px;box-sizing:border-box;border-right:1px solid rgba(255,255,255,0.03);transform:translateX(-110%);opacity:0;pointer-events:none;position:relative;z-index:1000;transition:transform .28s ease,opacity .28s ease}
+.layout.friends-open .left{transform:translateX(0) !important;opacity:1 !important;pointer-events:auto !important}
+
+/* Left panel structure */
+.left .panel-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.left .panel-top .title{font-weight:700}
+.left .panel-top .controls{display:flex;gap:8px;align-items:center}
+
+/* Profile section */
+.profile-section{display:flex;flex-direction:column;gap:10px;padding:8px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
+.profile-row{display:flex;align-items:center;gap:12px;min-width:0}
+.profile-row img{width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,0.03);flex:0 0 56px}
+.profile-name{
+  font-weight:700;
+  color:var(--white);
+  flex:1;
+  min-width:0;
+  display:block;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.profile-bio{font-size:0.85rem;color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* separator */
+.left .sep{height:1px;background:rgba(255,255,255,0.03);margin:12px 0;border-radius:2px}
+
+/* friends list */
+.section-title{font-size:.86rem;color:var(--muted);margin-top:4px;margin-bottom:6px}
+.friends-list{overflow:auto;flex:1;padding-right:6px;display:block;min-height:80px}
 .friend{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;cursor:pointer;transition:background .12s,transform .08s}
-.friend:active{transform:scale(.995)}
 .friend img{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,0.03);flex:0 0 44px}
-.friend .meta{display:flex;flex-direction:column}
-.friend .name{font-weight:700}
+.friend .meta{display:flex;flex-direction:column;min-width:0}
+.friend .name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
 .friend .small{font-size:0.85rem;color:var(--muted);display:inline-block}
 .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-left:8px;border:2px solid rgba(11,11,11,1)}
-.status-online{background:var(--online); box-shadow:0 0 6px rgba(31,138,66,0.9)}
-.status-offline{background:var(--offline); box-shadow:none}
+.status-online{background:var(--accent); box-shadow:0 0 6px rgba(255,255,255,0.06)}
+.status-offline{background:#666; box-shadow:none}
 
-.center{flex:1;display:flex;flex-direction:column;padding:12px 12px 96px 12px;box-sizing:border-box;min-width:0;transition:margin .36s cubic-bezier(.2,.9,.2,1)}
+/* center / chat */
+.center{flex:1;display:flex;flex-direction:column;padding:12px 12px 140px 12px;box-sizing:border-box;min-width:0;transition:margin var(--fade-duration) cubic-bezier(.2,.9,.2,1)}
 .layout.friends-open .center{margin-left:36%}
 .chat-header{display:flex;align-items:center;gap:12px;padding-bottom:8px}
 .peer-avatar{width:48px;height:48px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,0.03);display:inline-block;flex:0 0 48px}
@@ -44,146 +87,179 @@ header{height:var(--header-h);display:flex;align-items:center;justify-content:sp
 .peer-sub{font-size:0.9rem;color:var(--muted);display:flex;align-items:center;gap:8px}
 
 .messages{flex:1;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:8px;width:100%;scroll-behavior:smooth}
-.msg-row{display:flex;align-items:flex-end;gap:8px;width:100%}
+.msg-row{display:flex;align-items:flex-end;gap:8px;width:100%;position:relative}
 
-/* bolha - ajuste para n„o encolher do lado do emissor */
+/* message bubble */
 .msg{
   max-width: calc(100% - 72px);
   padding:10px 14px;
   border-radius:14px;
   word-break:break-word;
-  box-shadow:0 10px 30px rgba(0,0,0,0.45);
+  box-shadow:0 8px 24px rgba(0,0,0,0.45);
   display:flex;
   flex-direction:column;
   text-align:left;
   align-items:flex-start;
   flex: 0 1 auto;
+  position:relative;
 }
-.msg.me{background:#000;color:#fff}
-.msg.their{background:#fff;color:#000}
+.msg.me{background:#0d0d0d;color:#fff;border:1px solid rgba(255,255,255,0.03)}
+.msg.their{background:#fff;color:#000;border:1px solid rgba(0,0,0,0.04)}
 
-.msg .meta{
-  display:block;
-  font-size:0.78rem;
-  margin-bottom:6px;
-  font-weight:700;
-  line-height:1;
-  text-align:left;
-  width:100%;
-}
+.msg .meta{ display:block;font-size:0.78rem;margin-bottom:6px;font-weight:700;line-height:1;text-align:left;width:100%}
 .msg.their .meta{ color:#111; }
 .msg.me .meta{ color:#bbb; }
 
 .msg-avatar{width:36px;height:36px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,0.03);flex:0 0 36px;align-self:flex-end}
 .msg-image{max-width:100%;height:auto;border-radius:10px;display:block;margin-top:8px;cursor:pointer;object-fit:cover}
 
-/* small UI bits */
-.requests-badge{position:relative;display:inline-block}
-.requests-badge .count{position:absolute;right:-6px;top:-6px;background:#ff4d4f;color:white;border-radius:999px;padding:2px 6px;font-size:12px}
-
 /* composer */
-.composer{position:fixed;right:12px;left:12px;bottom:12px;display:flex;gap:8px;align-items:center;padding:10px;background:var(--card);border-radius:14px;border-top:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(0,0,0,0.6);z-index:30}
-.composer .preview img{width:84px;height:84px;border-radius:8px;object-fit:cover}
+.composer{position:fixed;right:12px;left:12px;bottom:12px;display:flex;flex-direction:column;gap:8px;padding:10px;background:var(--card);border-radius:14px;border-top:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(0,0,0,0.6);z-index:30}
+.composer-row{display:flex;gap:8px;align-items:center;width:100%}
 .composer input[type="text"]{flex:1;padding:12px 14px;border-radius:10px;background:#080808;border:1px solid rgba(255,255,255,0.03);color:var(--white);outline:none}
 .btn{padding:10px 12px;border-radius:10px;border:none;cursor:pointer}
 .btn:active{transform:scale(.98)}
-.btn-send{background:#fff;color:#000;font-weight:700}
+.btn-send{background:#fff;color:#050505;font-weight:700}
 .btn-plain{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.03)}
 
-.center.no-active .chat-header,
-.center.no-active .messages,
-.center.no-active .composer {
-  display: none;
+.reply-preview{
+  display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);
 }
-.center .empty-placeholder{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex:1;
-  color:var(--muted);
-  font-size:1rem;
-  text-align:center;
-}
+.reply-preview .small{font-size:12px;color:var(--muted)}
+.reply-preview .text{font-size:13px;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
+/* action popup */
+.msg-action-popup{
+  position:fixed;z-index:22000;background:#0f1012;border:1px solid rgba(255,255,255,0.05);padding:8px;border-radius:10px;box-shadow:0 18px 40px rgba(0,0,0,0.6);display:flex;gap:8px;align-items:center;
+}
+.msg-action-popup button{background:transparent;color:var(--white);border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+.msg-action-popup button:hover{background:rgba(255,255,255,0.02)}
+
+/* small UI */
+.requests-badge{position:relative;display:inline-block}
+.requests-badge .count{position:absolute;right:-6px;top:-6px;background:#ff4d4f;color:white;border-radius:999px;padding:2px 6px;font-size:12px}
+
+/* modals - very high z-index to appear above left panel */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:20000 !important}
+.modal-card{width:360px;background:#0f1012;padding:16px;border-radius:12px;box-shadow:0 18px 48px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.02)}
+.modal-card h3{margin:0 0 8px 0}
+
+/* login */
+#loginCard input{padding:12px;width:100%;border-radius:10px;border:1px solid #202225;background:#0b0c0d;color:#eee;margin-top:10px}
+.login-actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end}
+
+/* profile modal */
+#profileCard img{width:84px;height:84px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,0.03)}
+#profileCard textarea{width:100%;height:90px;margin-top:12px;border-radius:8px;background:#080808;border:1px solid rgba(255,255,255,0.03);color:white;padding:8px}
+
+/* splash */
+#splashScreen{position:fixed;inset:0;background:var(--splash-bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .45s}
+#splashScreen.hidden{opacity:0;pointer-events:none}
+.splash-inner{display:flex;flex-direction:column;align-items:center;gap:10px;transform-origin:center center;animation: splashIn .8s cubic-bezier(.2,.9,.2,1) both}
+@keyframes splashIn {
+  0%{ transform: translateY(8px) scale(.98); opacity:0 }
+  60%{ transform: translateY(-4px) scale(1.02); opacity:1 }
+  100%{ transform: translateY(0) scale(1); opacity:1 }
+}
+.splash-logo{font-family:var(--brand-font);font-weight:800;font-size:34px;letter-spacing:4px}
+.splash-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px}
+
+/* responsive */
 @media (max-width:900px){
-  :root{ --header-h:56px; }
   header{padding:0 12px}
   .left{position:fixed;left:0;top:var(--header-h);bottom:0;transform:translateX(-6%);width:86%;max-width:none;min-width:0;padding:12px;border-radius:0 8px 8px 0;box-shadow:0 20px 60px rgba(0,0,0,0.7)}
-  .layout.friends-open .left{transform:translateX(0)}
+  .layout.friends-open .left{transform:translateX(0) !important}
   .layout.friends-open .center{margin-left:0}
   .center{padding:8px 8px 140px 8px}
   .msg{max-width:85%}
-  .composer{position:fixed;left:0;right:0;bottom:0;border-radius:0;padding:10px 12px;height:auto;display:flex;align-items:center;gap:8px}
-  .composer input[type="text"]{padding:12px 14px;font-size:16px}
-  .btn{padding:12px 14px;border-radius:10px}
-  .btn-send{padding:12px 14px}
-  .friend{padding:12px}
+  .composer{position:fixed;left:0;right:0;bottom:0;border-radius:0;padding:10px 12px;height:auto;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .composer-row{width:100%}
 }
-
-.click-pop{ transform:scale(.98); transition: transform .08s }
-.visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0)}
-#login-modal{display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:500}
-#login-card{background:#222;padding:18px;border-radius:10px;min-width:260px}
-#login-card input{padding:8px;width:100%;border-radius:6px;border:1px solid #333;background:#111;color:#eee}
-#login-card button{margin-top:10px;width:100%;padding:8px;border-radius:8px;border:none;background:#fff;color:#000;font-weight:700;cursor:pointer}
-
-/* story modal */
-#storiesModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;z-index:600}
-#storiesCard{width:90%;max-width:760px;background:#0e0e0e;padding:12px;border-radius:12px}
-.story-item{display:flex;gap:8px;align-items:center;padding:8px;border-radius:8px}
-.story-item img{width:120px;height:80px;object-fit:cover;border-radius:8px}
-
-/* requests modal */
-#requestsModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:601}
-#requestsCard{width:360px;background:#111;padding:12px;border-radius:10px}
-.req-row{display:flex;align-items:center;justify-content:space-between;padding:8px;border-bottom:1px solid rgba(255,255,255,0.03)}
-.req-actions{display:flex;gap:8px}
 </style>
 </head>
 <body>
 
-<div class="app">
+<!-- SPLASH -->
+<div id="splashScreen" aria-hidden="false">
+  <div class="splash-inner" role="img" aria-label="Project splash">
+    <div class="splash-logo" style="color:var(--white)">Project</div>
+    <div class="splash-sub">paci√™ncia</div>
+  </div>
+</div>
+
+<div class="app" aria-hidden="false">
   <header>
     <div class="brand" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" stroke="white" stroke-opacity="0.06" stroke-width="1.6"/><path d="M7.5 12h9" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <rect x="2" y="2" width="20" height="20" rx="5" stroke="white" stroke-opacity="0.06" stroke-width="1.6"/>
+        <path d="M7.5 12h9" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
       <div class="title">Project</div>
     </div>
 
-    <div class="top-actions">
-      <button id="btnOpenFriends" class="icon-btn" aria-label="Amigos" title="Amigos" type="button"></button>
+    <div class="top-actions" role="toolbar" aria-label="A√ß√µes">
+      <button id="btnOpenFriends" class="icon-btn" aria-label="Amigos" title="Amigos" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4z"/>
+          <path d="M4 20v-1a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v1"/>
+        </svg>
+      </button>
 
-      <!-- add friend -->
-      <button id="btnAddFriend" class="icon-btn" title="Adicionar amigo" aria-label="Adicionar amigo"></button>
+      <button id="btnAddFriend" class="btn-header" title="Adicionar amigo" aria-label="Adicionar amigo">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle">
+          <path d="M11 5v14M5 11h14"/>
+        </svg>
+        <span style="color:#050505">Adicionar</span>
+      </button>
 
-      <!-- requests (badge) -->
-      <div class="requests-badge">
-        <button id="btnRequests" class="icon-btn" title="Pedidos" aria-label="Pedidos"></button>
+      <div class="requests-badge" title="Pedidos">
+        <button id="btnRequests" class="icon-btn" title="Pedidos" aria-label="Pedidos">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
         <span id="requestsCount" class="count" style="display:none">0</span>
       </div>
-
-      <!-- stories -->
-      <button id="btnStories" class="icon-btn" title="Stories" aria-label="Stories"></button>
-
-      <button id="btnOpenProfile" class="icon-btn" title="Perfil" aria-label="Abrir perfil"></button>
     </div>
   </header>
 
   <div class="layout" id="layoutRoot">
     <aside class="left" id="leftPanel" aria-hidden="true">
-      <div style="display:flex;align-items:center;gap:8px">
-        <strong>Amigos</strong>
-        <button id="closeFriends" class="close-btn" title="Fechar lista"></button>
-      </div>
-
-      <div class="me" style="margin-top:10px">
-        <img id="meAvatarLeft" src="https://via.placeholder.com/56" alt="me" data-user="">
-        <div class="info">
-          <div class="name" id="meNameLeft">Convidado</div>
-          <div class="small" id="meBioLeft">Editar perfil</div>
+      <div class="panel-top">
+        <div class="title">Seu perfil</div>
+        <div class="controls">
+          <button id="btnEditProfile" class="icon-btn" title="Editar perfil" aria-label="Editar perfil">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+            </svg>
+          </button>
+          <button id="closeFriends" class="icon-btn" title="Fechar lista" aria-label="Fechar lista">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
       </div>
 
-      <div class="section-title">Lista</div>
+      <div class="profile-section" role="region" aria-label="Seu perfil">
+        <div class="profile-row">
+          <img id="meAvatarLeft" src="https://via.placeholder.com/56" alt="me" data-user="">
+          <div style="display:flex;flex-direction:column;min-width:0">
+            <div class="profile-name" id="meNameLeft">Convidado</div>
+            <div class="profile-bio" id="meBioLeft">Editar perfil</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sep" aria-hidden="true"></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="section-title">Lista de amigos</div>
+      </div>
+
       <div class="friends-list" id="friendsList" aria-live="polite"></div>
     </aside>
 
@@ -201,54 +277,41 @@ header{height:var(--header-h);display:flex;align-items:center;justify-content:sp
         </div>
       </div>
 
-      <div class="empty-placeholder" id="emptyPlaceholder">Selecione um amigo para comeÁar</div>
+      <div class="empty-placeholder" id="emptyPlaceholder"></div>
 
       <div class="messages" id="messages" role="log" aria-live="polite"></div>
 
       <div class="composer" id="composer" aria-label="Composer de mensagens">
-        <div id="composerPreview" style="display:none"></div>
-        <input id="inputText" type="text" placeholder="Digite mensagem..." autocomplete="off" disabled>
-        <button id="btnAttach" class="btn btn-plain" title="Anexar imagem">Midia</button>
-        <input id="inputFile" type="file" accept="image/*" style="display:none">
-        <button id="btnSend" class="btn btn-send" disabled>Enviar</button>
+        <div id="replyPreview" style="display:none" class="reply-preview"></div>
+        <div class="composer-row">
+          <input id="inputText" type="text" placeholder="Digite mensagem..." autocomplete="off" disabled>
+          <button id="btnAttach" class="btn btn-plain" title="Anexar imagem">M√≠dia</button>
+          <input id="inputFile" type="file" accept="image/*" style="display:none">
+          <button id="btnSend" class="btn btn-send" disabled>Enviar</button>
+        </div>
+        <div id="composerImagePreview" style="display:none"></div>
       </div>
     </main>
   </div>
 </div>
 
 <!-- Requests modal -->
-<div id="requestsModal">
-  <div id="requestsCard">
-    <h3 style="margin:6px 0 12px 0">Pedidos de amizade</h3>
+<div id="requestsModal" class="modal-backdrop">
+  <div id="requestsCard" class="modal-card">
+    <h3>Pedidos de amizade</h3>
     <div id="requestsList"></div>
-    <div style="text-align:right;margin-top:8px">
+    <div style="text-align:right;margin-top:12px">
       <button onclick="document.getElementById('requestsModal').style.display='none'" class="btn btn-plain">Fechar</button>
     </div>
   </div>
 </div>
 
-<!-- Stories modal -->
-<div id="storiesModal">
-  <div id="storiesCard">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h3 style="margin:6px 0">Stories</h3>
-      <div>
-        <input id="storyFile" type="file" accept="image/*" style="display:none">
-        <button id="btnAddStory" class="btn btn-plain">Adicionar story</button>
-        <button id="closeStories" class="btn btn-plain">Fechar</button>
-      </div>
-    </div>
-    <div id="storiesList" style="margin-top:10px"></div>
-  </div>
-</div>
-
-<!-- profile modal -->
-<div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:200">
-  <div style="width:420px;background:#0e0e0e;padding:20px;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,0.7)">
+<!-- Profile modal (only avatar + bio) -->
+<div id="profileModal" class="modal-backdrop">
+  <div id="profileCard" class="modal-card">
     <div style="display:flex;gap:12px;align-items:center">
-      <img id="profileAvatar" src="https://via.placeholder.com/84" style="width:84px;height:84px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,0.03)">
+      <img id="profileAvatar" src="https://via.placeholder.com/84" alt="avatar">
       <div style="flex:1">
-        <input id="profileName" placeholder="Seu nome (opcional)" style="width:100%;padding:10px;border-radius:8px;background:#0b0b0b;border:1px solid rgba(255,255,255,0.03);color:white">
         <div style="display:flex;gap:8px;margin-top:8px">
           <button id="btnChangeAvatar" class="btn btn-plain">Alterar foto</button>
           <input id="profileFile" type="file" accept="image/*" style="display:none">
@@ -257,61 +320,73 @@ header{height:var(--header-h);display:flex;align-items:center;justify-content:sp
         </div>
       </div>
     </div>
-    <textarea id="profileBio" placeholder="Bio" style="width:100%;height:90px;margin-top:12px;border-radius:8px;background:#0b0b0b;border:1px solid rgba(255,255,255,0.03);color:white;padding:8px"></textarea>
+    <textarea id="profileBio" placeholder="Bio (m√°x 200 caracteres)"></textarea>
   </div>
 </div>
 
 <!-- LOGIN modal -->
-<div id="login-modal">
-  <div id="login-card">
-    <input id="login-username" placeholder="Seu username" />
-    <button id="login-ok">Entrar</button>
+<div id="login-modal" class="modal-backdrop" aria-modal="true" role="dialog">
+  <div id="loginCard" class="modal-card">
+    <h3>Entrar / Criar conta</h3>
+    <input id="login-username" placeholder="Username" autocomplete="username" />
+    <input id="login-password" type="password" placeholder="Senha" autocomplete="current-password" />
+    <div class="login-actions">
+      <button id="login-ok" class="btn btn-send">Entrar</button>
+      <button id="create-account" class="btn btn-plain">Criar conta</button>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--muted)">Usu√°rio e senha salvos no Firestore (hash SHA-256).</div>
   </div>
 </div>
 
-<!-- Firebase (mantido para Firestore + auth/presence) -->
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<!-- action popup container -->
+<div id="msgActionPopup" style="display:none" class="msg-action-popup" role="dialog" aria-hidden="true"></div>
 
-<!-- Supabase client (CDN) -->
+<!-- Firebase & Supabase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-/* Supabase client (renomeado) */
+/* Supabase client */
 const SUPABASE_URL = "https://psefyuszpacdfhjrqvwd.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzZWZ5dXN6cGFjZGZoanJxdndkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MjgwMjQsImV4cCI6MjA4MzMwNDAyNH0.E2qZxPEim9bW4P4jsHkybsbUYdInGIV19ZMXOHdQXCg";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 </script>
 
 <script>
-/* ========== FIREBASE ========== */
+/* Firebase init */
 firebase.initializeApp({
   apiKey: "AIzaSyBKotEIdaCZbPs3e6cX-0Pnlfa9pqomJ5o",
   authDomain: "chat-36f52.firebaseapp.com",
   projectId: "chat-36f52"
 });
 const db = firebase.firestore();
+</script>
 
-/* ========== DOM refs ========== */
+<script>
+/* ========== DOM refs & logic ========== */
+const splashScreen = document.getElementById('splashScreen');
+const loginModal = document.getElementById('login-modal');
+const loginCard = document.getElementById('loginCard');
+const loginUsername = document.getElementById('login-username');
+const loginPassword = document.getElementById('login-password');
+const loginOk = document.getElementById('login-ok');
+const createAccountBtn = document.getElementById('create-account');
+
 const layoutRoot = document.getElementById('layoutRoot');
 const btnOpenFriends = document.getElementById('btnOpenFriends');
 const closeFriends = document.getElementById('closeFriends');
 const friendsList = document.getElementById('friendsList');
 
-const loginModal = document.getElementById('login-modal');
-const loginUsername = document.getElementById('login-username');
-const loginOk = document.getElementById('login-ok');
-
 const meAvatarLeft = document.getElementById('meAvatarLeft');
 const meNameLeft = document.getElementById('meNameLeft');
 const meBioLeft = document.getElementById('meBioLeft');
 
-const btnOpenProfile = document.getElementById('btnOpenProfile');
+const btnEditProfile = document.getElementById('btnEditProfile');
 const profileModal = document.getElementById('profileModal');
 const btnChangeAvatar = document.getElementById('btnChangeAvatar');
 const profileFile = document.getElementById('profileFile');
 const profileAvatar = document.getElementById('profileAvatar');
-const profileName = document.getElementById('profileName');
 const profileBio = document.getElementById('profileBio');
 const btnSaveProfile = document.getElementById('btnSaveProfile');
 const btnCloseProfile = document.getElementById('btnCloseProfile');
@@ -329,7 +404,11 @@ const inputText = document.getElementById('inputText');
 const btnAttach = document.getElementById('btnAttach');
 const inputFile = document.getElementById('inputFile');
 const btnSend = document.getElementById('btnSend');
-const composerPreview = document.getElementById('composerPreview');
+const composerPreviewImg = document.getElementById('composerImagePreview');
+
+const replyPreview = document.getElementById('replyPreview');
+
+const msgActionPopup = document.getElementById('msgActionPopup');
 
 const btnAddFriend = document.getElementById('btnAddFriend');
 const btnRequests = document.getElementById('btnRequests');
@@ -337,36 +416,61 @@ const requestsCount = document.getElementById('requestsCount');
 const requestsModal = document.getElementById('requestsModal');
 const requestsList = document.getElementById('requestsList');
 
-const btnStories = document.getElementById('btnStories');
-const storiesModal = document.getElementById('storiesModal');
-const closeStories = document.getElementById('closeStories');
-const storyFile = document.getElementById('storyFile');
-const btnAddStory = document.getElementById('btnAddStory');
-const storiesList = document.getElementById('storiesList');
-
 let currentUser = null;
 let profileCache = {};
 let activePeer = null;
 let unsubChat = null;
 let unsubPeer = null;
-
-/* local upload refs */
 let pendingFileLocal = null;
 
-/* ========== helpers ========== */
+/* reply state */
+let pendingReply = null; // { id, from, text, imageUrl }
+
+/* helpers */
 function normalize(u){ return (u||'').toString().trim().toLowerCase(); }
-function toast(m){ alert(m); }
+function toast(m){ try{ console.log('TOAST:',m); }catch(e){} alert(m); }
 function dbg(...a){ console.log('[DBG]', ...a); }
 
-/* ========== audio ========== */
+async function sha256Hex(text){
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ========== audio restore ========== */
 let audioCtx = null;
-function playSendSound(){ try{ if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const t = audioCtx.currentTime; const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(900, t); o.frequency.exponentialRampToValueAtTime(600, t + 0.12); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.25);}catch(e){ console.warn('audio failed', e); } }
+function playSendSound(){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = audioCtx.currentTime;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(900, t);
+    o.frequency.exponentialRampToValueAtTime(600, t + 0.12);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.35, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t);
+    o.stop(t + 0.25);
+  }catch(e){ console.warn('audio failed', e); }
+}
 window.playSendSound = playSendSound;
 
-/* ========== Auth (anonymous for presence tests) ========== */
-firebase.auth().signInAnonymously().catch(err=>console.warn('Firebase auth failed (anonymous):', err));
+/* splash hide then show login */
+function hideSplashAndShowLogin(){
+  splashScreen.classList.add('hidden');
+  setTimeout(()=> {
+    try{ splashScreen.remove(); }catch(e){}
+    if(!currentUser) showLogin();
+  }, 500);
+}
+window.addEventListener('load', ()=> setTimeout(hideSplashAndShowLogin, 900));
 
-/* ========== presence helper ========== */
+function showLogin(){ loginModal.style.display = 'flex'; loginCard.focus && loginCard.focus(); }
+
+/* presence */
 async function setOnlineState(on){
   if(!currentUser) return;
   try{
@@ -379,46 +483,63 @@ async function setOnlineState(on){
 }
 window.addEventListener('beforeunload', ()=> { if(currentUser) db.doc('users/'+currentUser).update({ online:false, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{}); });
 
-/* ========== LOGIN ========== */
-loginOk.onclick = async ()=>{
+/* AUTH */
+createAccountBtn.addEventListener('click', async ()=>{
   const raw = (loginUsername.value||'').trim();
+  const pw = (loginPassword.value||'').trim();
+  if(!raw || !pw) return toast('Preencha usu√°rio e senha (m√≠n 6 caracteres)');
+  if(pw.length < 6) return toast('Senha m√≠nima de 6 caracteres');
   const id = normalize(raw);
-  if(!id){ toast('Digite username'); return; }
+  try{
+    const ref = db.doc('users/'+id);
+    const snap = await ref.get();
+    if(snap.exists) return toast('Usu√°rio j√° existe');
+    const hash = await sha256Hex(pw);
+    await ref.set({ name: raw, passwordHash: hash, bio:'', avatar:'', friends:[], online:false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    toast('Conta criada. Agora fa√ßa login.');
+  }catch(e){ console.error('create account err', e); toast('Erro ao criar conta'); }
+});
 
-  const userRef = db.doc('users/'+id);
-  const snap = await userRef.get();
-  const displayName = raw || id;
+loginOk.addEventListener('click', async ()=>{
+  const raw = (loginUsername.value||'').trim();
+  const pw = (loginPassword.value||'').trim();
+  if(!raw || !pw) return toast('Preencha usu√°rio e senha');
+  const id = normalize(raw);
+  try{
+    const ref = db.doc('users/'+id);
+    const snap = await ref.get();
+    if(!snap.exists) return toast('Usu√°rio n√£o encontrado');
+    const data = snap.data() || {};
+    const stored = data.passwordHash || '';
+    const hash = await sha256Hex(pw);
+    if(stored !== hash) return toast('Senha inv√°lida');
+    currentUser = id;
+    profileCache[currentUser] = { name: data.name || raw, avatar: data.avatar || '', bio: data.bio || '', online: data.online || false, lastSeen: data.lastSeen || null };
 
-  if(!snap.exists){
-    await userRef.set({ name: displayName, bio:'', avatar:'', friends:[], online:true, lastSeen: firebase.firestore.FieldValue.serverTimestamp() });
-  } else {
-    await userRef.update({ online:true, lastSeen: firebase.firestore.FieldValue.serverTimestamp() });
-  }
+    // ensure name visible
+    meNameLeft.textContent = profileCache[currentUser].name || currentUser;
+    meNameLeft.style.display = 'block';
+    meNameLeft.style.color = 'var(--white)';
 
-  const data = (await userRef.get()).data();
-  currentUser = id;
-  profileCache[currentUser] = { name: data.name || displayName, avatar: data.avatar || '', bio: data.bio || '', online: data.online || false, lastSeen: data.lastSeen || null };
+    meBioLeft.textContent = profileCache[currentUser].bio || '';
+    meAvatarLeft.src = profileCache[currentUser].avatar || 'https://via.placeholder.com/56';
+    meAvatarLeft.dataset.user = currentUser;
+    try{ loginModal.remove(); }catch(e){ loginModal.style.display='none'; }
+    centerMain.classList.add('no-active');
+    inputText.value = '';
+    btnSend.disabled = true;
+    inputText.disabled = true;
+    await setOnlineState(true);
+    watchFriends();
+    watchRequests();
+  }catch(e){ console.error('login err', e); toast('Erro ao logar'); }
+});
 
-  meNameLeft.textContent = profileCache[currentUser].name || currentUser;
-  meBioLeft.textContent = profileCache[currentUser].bio || '';
-  meAvatarLeft.src = profileCache[currentUser].avatar || 'https://via.placeholder.com/56';
-  meAvatarLeft.dataset.user = currentUser;
-
-  try{ loginModal.remove(); }catch(e){ loginModal.style.display='none'; }
-
-  centerMain.classList.add('no-active');
-  inputText.value = '';
-  btnSend.disabled = true;
-  inputText.disabled = true;
-
-  await setOnlineState(true);
-  watchFriends();
-  watchRequests(); // start requests watcher
-  watchStoriesRealtime();
-};
+/* keyboard quick submit */
 loginUsername.addEventListener('keydown', e=> { if(e.key==='Enter') loginOk.click(); });
+loginPassword.addEventListener('keydown', e=> { if(e.key==='Enter') loginOk.click(); });
 
-/* ========== UI toggles ========== */
+/* UI toggles */
 btnOpenFriends.addEventListener('click', ()=> {
   const opened = layoutRoot.classList.toggle('friends-open');
   document.getElementById('leftPanel').setAttribute('aria-hidden', opened ? 'false' : 'true');
@@ -427,32 +548,38 @@ btnOpenFriends.addEventListener('click', ()=> {
 });
 closeFriends.addEventListener('click', ()=> { layoutRoot.classList.remove('friends-open'); document.getElementById('leftPanel').setAttribute('aria-hidden','true'); });
 
-btnOpenProfile.addEventListener('click', ()=> { if(!currentUser){ toast('FaÁa login primeiro'); return; } profileModal.style.display='flex'; });
+/* edit profile only inside menu */
+btnEditProfile.addEventListener('click', ()=> {
+  if(!currentUser){ toast('Fa√ßa login primeiro'); return; }
+  profileModal.style.zIndex = '20000';
+  profileModal.style.display = 'flex';
+  profileAvatar.src = profileCache[currentUser]?.avatar || meAvatarLeft.src || 'https://via.placeholder.com/84';
+  profileBio.value = profileCache[currentUser]?.bio || '';
+});
 btnCloseProfile.addEventListener('click', ()=> profileModal.style.display='none');
 
+/* add friend (keeps flow) */
 btnAddFriend.addEventListener('click', async () => {
-  if (!currentUser) return toast('FaÁa login primeiro');
+  if (!currentUser) return toast('Fa√ßa login primeiro');
   const raw = prompt('Digite o username do amigo:');
   if (!raw) return;
   const target = normalize(raw);
-  if (target === currentUser) return toast('VocÍ n„o pode se adicionar.');
-  const snap = await db.doc('users/' + target).get();
-  if (!snap.exists) return toast('Usu·rio n„o encontrado.');
-  await db.collection('friendRequests').add({
-    from: currentUser,
-    to: target,
-    status: 'pending',
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  toast('Pedido enviado!');
+  if (target === currentUser) return toast('Voc√™ n√£o pode se adicionar.');
+  try{
+    const snap = await db.doc('users/' + target).get();
+    if (!snap.exists) return toast('Usu√°rio n√£o encontrado.');
+    await db.collection('friendRequests').add({
+      from: currentUser,
+      to: target,
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('Pedido enviado!');
+  }catch(e){ console.error('add friend err', e); toast('Erro ao enviar pedido'); }
 });
 
-/* ========== Requests (watcher + UI) ==========
-   - shows badge count
-   - modal lists requests with accept/decline
-*/
-let currentRequests = {}; // id -> doc ref + data
-
+/* Requests watcher */
+let currentRequests = {};
 function watchRequests(){
   if(!currentUser) return;
   db.collection('friendRequests').where('to','==',currentUser).where('status','==','pending')
@@ -468,7 +595,6 @@ function watchRequests(){
       snap.docs.forEach(doc=>{
         const data = doc.data();
         currentRequests[doc.id] = { id: doc.id, ref: doc.ref, data };
-        // build list for modal
         const row = document.createElement('div'); row.className = 'req-row';
         const left = document.createElement('div'); left.style.display='flex'; left.style.alignItems='center'; left.style.gap='8px';
         const avatar = document.createElement('img'); avatar.src = data.from && profileCache[data.from]?.avatar ? profileCache[data.from].avatar : 'https://via.placeholder.com/44'; avatar.style.width='36px'; avatar.style.height='36px'; avatar.style.borderRadius='8px';
@@ -483,18 +609,15 @@ function watchRequests(){
 
         acceptBtn.addEventListener('click', async ()=>{
           try{
-            // add each other as friends
             await db.doc('users/'+currentUser).set({ friends: firebase.firestore.FieldValue.arrayUnion(data.from) }, { merge: true });
             await db.doc('users/'+data.from).set({ friends: firebase.firestore.FieldValue.arrayUnion(currentUser) }, { merge: true });
-            // update request status
             await doc.ref.update({ status: 'accepted', respondedAt: firebase.firestore.FieldValue.serverTimestamp() });
             toast('Amizade aceita!');
-            // update UI immediately
             row.remove();
             requestsCount.textContent = String(Math.max(0, Number(requestsCount.textContent)-1));
             if(requestsCount.textContent === '0') requestsCount.style.display='none';
-            // refresh friends list
             watchFriends();
+            try{ playSendSound(); }catch(e){}
           }catch(e){ console.error('accept err', e); toast('Erro ao aceitar'); }
         });
 
@@ -508,18 +631,16 @@ function watchRequests(){
           }catch(e){ console.error('decline err', e); toast('Erro ao recusar'); }
         });
       });
-    }, err=> {
-      console.error('watchRequests err', err);
-    });
+    }, err=> { console.error('watchRequests err', err); });
 }
 
 btnRequests.addEventListener('click', ()=>{
-  if(!currentUser){ toast('FaÁa login para ver pedidos'); return; }
+  if(!currentUser){ toast('Fa√ßa login para ver pedidos'); return; }
   requestsModal.style.display = 'flex';
 });
 requestsModal.addEventListener('click', (e)=> { if(e.target === requestsModal) requestsModal.style.display='none'; });
 
-/* ========== avatar upload - agora usa Supabase Storage tambÈm ========== */
+/* avatar upload via Supabase */
 btnChangeAvatar.addEventListener('click', ()=> profileFile.click());
 profileFile.addEventListener('change', async ()=>{
   const f = profileFile.files && profileFile.files[0];
@@ -550,53 +671,93 @@ profileFile.addEventListener('change', async ()=>{
   }catch(e){ console.error('avatar upload err', e); toast('Erro ao enviar avatar'); }
 });
 
-/* ========== friends watcher ========== */
-const friendUnsubs = {};
+/* profile save (bio only) */
+btnSaveProfile.addEventListener('click', async ()=>{
+  if(!currentUser) return toast('Fa√ßa login');
+  const bio = (profileBio.value||'').trim().slice(0,200);
+  try{
+    await db.doc('users/'+currentUser).set({ bio }, { merge:true });
+    profileCache[currentUser] = profileCache[currentUser] || {};
+    profileCache[currentUser].bio = bio;
+    meBioLeft.textContent = bio || '';
+    profileModal.style.display = 'none';
+    toast('Perfil atualizado');
+  }catch(e){ console.error('save profile err', e); toast('Erro ao salvar perfil'); }
+});
+
+/* ========== FRIENDS WATCHER - robust syncing, unsub cleanup ========== */
+
+const friendUnsubs = {}; // { username: unsubscribeFunction }
+function removeFriendSubscription(username){
+  const key = normalize(username);
+  try{
+    if(friendUnsubs[key] && typeof friendUnsubs[key] === 'function'){
+      try{ friendUnsubs[key](); }catch(e){}
+      delete friendUnsubs[key];
+    }
+    const node = friendsList.querySelector(`[data-user="${key}"]`);
+    if(node) node.remove();
+  }catch(e){ console.warn('removeFriendSubscription err', e); }
+}
+
 function watchFriends(){
   if(!currentUser) return;
-  db.doc('users/' + currentUser).onSnapshot(snap => {
-    friendsList.innerHTML = '';
-    const friends = snap.data()?.friends || [];
-    if(friends.length === 0){
-      friendsList.innerHTML = '<div style="color:var(--muted);padding:8px">Nenhum amigo</div>';
-      return;
-    }
-    friends.forEach(friend => {
-      const key = normalize(friend);
-      if(friendUnsubs[key]) return;
-      friendUnsubs[key] = db.doc('users/' + key)
-        .onSnapshot(fsnap => {
-          if(!fsnap.exists) return;
-          const data = fsnap.data() || {};
-          profileCache[key] = data;
-          const old = friendsList.querySelector(`[data-user="${key}"]`);
-          if(old) old.remove();
-          const node = createFriendNode(key, data);
-          friendsList.appendChild(node);
-          updateAllAvatars(key, data.avatar || '');
-        });
-    });
+  db.doc('users/' + currentUser).onSnapshot(async snap => {
+    try{
+      friendsList.innerHTML = '';
+      const friends = snap.data()?.friends || [];
+      const desired = new Set((friends||[]).map(f=>normalize(f)));
+      Object.keys(friendUnsubs).forEach(existing => {
+        if(!desired.has(existing)) removeFriendSubscription(existing);
+      });
+      for(const friend of friends){
+        const key = normalize(friend);
+        if(friendUnsubs[key]) continue;
+        try{
+          friendUnsubs[key] = db.doc('users/' + key)
+            .onSnapshot(fsnap => {
+              if(!fsnap.exists){ removeFriendSubscription(key); return; }
+              const data = fsnap.data() || {};
+              profileCache[key] = data;
+              const existing = friendsList.querySelector(`[data-user="${key}"]`);
+              const node = createFriendNode(key, data);
+              if(existing) friendsList.replaceChild(node, existing); else friendsList.appendChild(node);
+            }, err => {
+              console.error('friend doc watch err for', key, err);
+              if(friendUnsubs[key]){ try{ friendUnsubs[key](); }catch(e){} delete friendUnsubs[key]; }
+            });
+        }catch(e){ console.error('subscribe friend err', key, e); }
+      }
+      if((friends||[]).length === 0) friendsList.innerHTML = '<div style="color:var(--muted);padding:8px">Nenhum amigo</div>';
+    }catch(e){ console.error('watchFriends outer err', e); }
   });
 }
 
 function createFriendNode(username, data){
-  const div = document.createElement('div'); div.className='friend'; div.dataset.user = username;
-  const img = document.createElement('img'); img.src = data?.avatar || 'https://via.placeholder.com/44'; img.alt = username; img.dataset.user = username;
-  const info = document.createElement('div'); info.className='meta';
+  const key = normalize(username);
+  const div = document.createElement('div');
+  div.className='friend';
+  div.dataset.user = key;
+  div.setAttribute('role','button');
+  div.style.minWidth = '0';
+  const img = document.createElement('img');
+  img.src = data?.avatar || 'https://via.placeholder.com/44';
+  img.alt = username;
+  img.dataset.user = key;
+  const info = document.createElement('div'); info.className='meta'; info.style.minWidth='0';
   const name = document.createElement('div'); name.className='name'; name.textContent = data?.name || username;
-
-  const smallWrap = document.createElement('div'); smallWrap.style.display='flex'; smallWrap.style.alignItems='center';
+  const smallWrap = document.createElement('div'); smallWrap.style.display='flex'; smallWrap.style.alignItems='center'; smallWrap.style.gap='6px';
   const small = document.createElement('div'); small.className='small'; small.textContent = data?.online ? 'online' : 'offline';
   const dot = document.createElement('span'); dot.className = 'status-dot ' + (data?.online ? 'status-online' : 'status-offline');
   smallWrap.appendChild(small); smallWrap.appendChild(dot);
-
   info.appendChild(name); info.appendChild(smallWrap);
   div.appendChild(img); div.appendChild(info);
-  div.addEventListener('click', ()=> { openChat(username); layoutRoot.classList.remove('friends-open'); document.getElementById('leftPanel').setAttribute('aria-hidden','true'); });
+  div.addEventListener('click', ()=> { try{ openChat(username); }catch(e){ console.warn(e); } layoutRoot.classList.remove('friends-open'); document.getElementById('leftPanel').setAttribute('aria-hidden','true'); });
   return div;
 }
 
-/* ========== profile fetch helper ========== */
+/* ========== chat: open, render, send, attach (incl. reply+delete) ========== */
+
 async function getProfile(u){
   const id = normalize(u);
   const snap = await db.doc('users/'+id).get();
@@ -610,7 +771,6 @@ async function getProfile(u){
   return profileCache[id];
 }
 
-/* ========== update avatars globally ========== */
 function updateAllAvatars(user, url){
   const key = normalize(user);
   const nodes = document.querySelectorAll(`[data-user="${key}"]`);
@@ -620,9 +780,8 @@ function updateAllAvatars(user, url){
   });
 }
 
-/* ========== open chat & listeners (ativa o chat UI) ========== */
 async function openChat(peerRaw){
-  if(!currentUser) return toast('FaÁa login');
+  if(!currentUser) return toast('Fa√ßa login');
   const peer = normalize(peerRaw);
   if(unsubChat){ try{ unsubChat(); }catch(e){} unsubChat=null; }
   if(unsubPeer){ try{ unsubPeer(); }catch(e){} unsubPeer=null; }
@@ -670,19 +829,20 @@ async function openChat(peerRaw){
       messagesEl.innerHTML = '';
       for(const d of snap.docs){
         const m = d.data();
+        const id = d.id;
         const author = normalize(m.from);
         if(author && !profileCache[author]) await getProfile(author);
-        const el = renderMessage(m);
+        const el = await renderMessage(m, id);
         messagesEl.appendChild(el);
       }
 
-      // play sound for added messages (after initial snapshot)
+      // sound for incoming messages (after initial)
       snap.docChanges().forEach(ch => {
         if(ch.type === 'added'){
           const m = ch.doc.data();
           const from = normalize(m.from);
           if(!firstSnap && from !== currentUser){
-            playSendSound(); // incoming
+            try{ playSendSound(); }catch(e){}
           }
         }
       });
@@ -698,35 +858,95 @@ async function openChat(peerRaw){
   setTimeout(()=> messagesEl.scrollTop = messagesEl.scrollHeight, 120);
 }
 
-/* ========== render message (com correÁ„o de largura e imagens) ========== */
-function renderMessage(m){
+/* renderMessage now accepts id so popup/delete/reply work */
+async function renderMessage(m, docId){
   const from = normalize(m.from);
   const isMe = (from === currentUser);
   const row = document.createElement('div'); row.className = 'msg-row';
   row.style.justifyContent = isMe ? 'flex-end' : 'flex-start';
+  row.dataset.msgid = docId;
 
   const avatar = document.createElement('img'); avatar.className='msg-avatar'; avatar.dataset.user = from;
   avatar.src = (m.avatar && m.avatar.trim()) ? m.avatar : (profileCache[from] && profileCache[from].avatar) || 'https://via.placeholder.com/44';
 
   const bubble = document.createElement('div'); bubble.className = 'msg ' + (isMe ? 'me' : 'their');
-  // inline safety: garantir max-width tambÈm via style
   bubble.style.maxWidth = 'calc(100% - 72px)';
+  bubble.dataset.msgid = docId;
 
   const meta = document.createElement('div'); meta.className = 'meta';
   meta.textContent = (profileCache[from] && profileCache[from].name) ? profileCache[from].name : from;
   bubble.appendChild(meta);
 
-  if(m.text){ const p = document.createElement('div'); p.textContent = m.text; bubble.appendChild(p); }
-  if(m.imageUrl){
-    const img = document.createElement('img');
-    img.className = 'msg-image';
-    img.src = m.imageUrl;
-    img.alt='imagem';
-    img.style.maxWidth = '100%';
-    img.style.height = 'auto';
-    img.addEventListener('click', ()=> window.open(m.imageUrl,'_blank'));
-    bubble.appendChild(img);
+  // if message deleted -> show placeholder
+  if(m.deleted){
+    const removed = document.createElement('div');
+    removed.textContent = 'Mensagem apagada';
+    removed.style.fontStyle = 'italic';
+    removed.style.opacity = '0.9';
+    bubble.appendChild(removed);
+  } else {
+    // if replyTo present, render preview
+    if(m.replyToId){
+      const replyBox = document.createElement('div');
+      replyBox.style.borderLeft = '3px solid rgba(255,255,255,0.06)';
+      replyBox.style.paddingLeft = '8px';
+      replyBox.style.marginBottom = '6px';
+      replyBox.style.fontSize = '13px';
+      replyBox.style.color = 'var(--muted)';
+      replyBox.textContent = 'Carregando resposta...';
+      bubble.appendChild(replyBox);
+
+      // render snapshot quickly if available
+      if(m.replySnapshot){
+        const rs = m.replySnapshot;
+        if(rs.deleted) replyBox.textContent = 'Mensagem apagada';
+        else if(rs.text && rs.text.trim()){
+          replyBox.textContent = rs.from + ': ' + (rs.text.length>80 ? rs.text.slice(0,80)+'‚Ä¶' : rs.text);
+        } else if(rs.imageUrl){
+          replyBox.textContent = rs.from + ': [imagem]';
+        } else {
+          replyBox.textContent = rs.from + ': (sem conte√∫do)';
+        }
+      }
+
+      // now try to fetch referenced message dynamically to reflect deletion
+      (async ()=>{
+        try{
+          const chatId = [currentUser, activePeer].sort().join('__');
+          const docRef = db.collection('chats').doc(chatId).collection('messages').doc(m.replyToId);
+          const snap = await docRef.get();
+          if(!snap.exists){ replyBox.textContent = 'Mensagem apagada'; return; }
+          const real = snap.data() || {};
+          if(real.deleted) replyBox.textContent = 'Mensagem apagada';
+          else if(real.text && real.text.trim()){
+            replyBox.textContent = real.from + ': ' + (real.text.length>80 ? real.text.slice(0,80)+'‚Ä¶' : real.text);
+          } else if(real.imageUrl){
+            replyBox.textContent = real.from + ': [imagem]';
+          } else {
+            replyBox.textContent = real.from + ': (sem conte√∫do)';
+          }
+        }catch(e){
+          console.debug('reply preview fetch err', e);
+        }
+      })();
+    }
+
+    if(m.text && m.text.trim()){
+      const p = document.createElement('div'); p.textContent = m.text; bubble.appendChild(p);
+    }
+    if(m.imageUrl){
+      const img = document.createElement('img'); img.className = 'msg-image'; img.src = m.imageUrl; img.alt='imagem';
+      img.addEventListener('click', ()=> window.open(m.imageUrl,'_blank'));
+      bubble.appendChild(img);
+    }
   }
+
+  // attach click to show action popup (reply/delete) anchored to bubble
+  bubble.style.cursor = 'pointer';
+  bubble.addEventListener('click', (ev)=>{
+    ev.stopPropagation();
+    showMessageActions(docId, m, bubble);
+  });
 
   if(isMe){
     row.appendChild(bubble);
@@ -735,22 +955,155 @@ function renderMessage(m){
     row.appendChild(avatar);
     row.appendChild(bubble);
   }
+
   return row;
 }
 
-/* ========== send text ========== */
+/* showMessageActions: small popup with Reply / Delete for everyone (only if author) */
+function showMessageActions(docId, m, anchorEl){
+  // close any existing
+  msgActionPopup.style.display = 'none';
+  msgActionPopup.innerHTML = '';
+
+  const btnReply = document.createElement('button');
+  btnReply.textContent = 'Responder';
+  btnReply.addEventListener('click', ()=>{
+    setReplyTo(docId, m);
+    hideMsgActionPopup();
+  });
+
+  const actionsContainer = document.createElement('div');
+  actionsContainer.style.display='flex';
+  actionsContainer.style.gap='6px';
+
+  actionsContainer.appendChild(btnReply);
+
+  if(m.from === currentUser && !m.deleted){
+    const btnDelete = document.createElement('button');
+    btnDelete.textContent = 'Apagar para todos';
+    btnDelete.style.color = '#ff7b7b';
+    btnDelete.addEventListener('click', async ()=>{
+      const ok = confirm('Apagar esta mensagem para todos? Esta a√ß√£o n√£o pode ser desfeita.');
+      if(!ok) return;
+      try{
+        await deleteMessageForEveryone(docId);
+        hideMsgActionPopup();
+      }catch(e){ console.error('delete msg err', e); alert('Erro ao apagar mensagem'); }
+    });
+    actionsContainer.appendChild(btnDelete);
+  }
+
+  const btnClose = document.createElement('button');
+  btnClose.textContent = 'Fechar';
+  btnClose.addEventListener('click', hideMsgActionPopup);
+  actionsContainer.appendChild(btnClose);
+
+  msgActionPopup.appendChild(actionsContainer);
+  msgActionPopup.style.display = 'flex';
+
+  // position popup near anchorEl (center top)
+  const rect = anchorEl.getBoundingClientRect();
+  const popupRect = msgActionPopup.getBoundingClientRect();
+  let left = rect.left + (rect.width/2) - (popupRect.width/2);
+  let top = rect.top - popupRect.height - 10;
+  if(top < 8) top = rect.bottom + 8;
+  if(left < 8) left = 8;
+  msgActionPopup.style.left = left + 'px';
+  msgActionPopup.style.top = top + 'px';
+}
+
+function hideMsgActionPopup(){
+  msgActionPopup.style.display = 'none';
+}
+
+/* deleteMessageForEveryone: updates message doc to mark deleted */
+async function deleteMessageForEveryone(docId){
+  if(!currentUser || !activePeer) throw new Error('Sem chat ativo');
+  const chatId = [currentUser, activePeer].sort().join('__');
+  const ref = db.collection('chats').doc(chatId).collection('messages').doc(docId);
+  await ref.update({
+    deleted: true,
+    deletedBy: currentUser,
+    deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    text: '',
+    imageUrl: ''
+  });
+}
+
+/* reply handling */
+function setReplyTo(docId, m){
+  pendingReply = {
+    id: docId,
+    from: m.from,
+    text: m.text || '',
+    imageUrl: m.imageUrl || '',
+  };
+  renderReplyPreview();
+}
+function clearReply(){
+  pendingReply = null;
+  replyPreview.style.display = 'none';
+  replyPreview.innerHTML = '';
+}
+
+/* render reply preview in composer */
+function renderReplyPreview(){
+  if(!pendingReply){ clearReply(); return; }
+  replyPreview.innerHTML = '';
+  replyPreview.style.display = 'flex';
+  const who = document.createElement('div'); who.className='small'; who.textContent = pendingReply.from;
+  const txt = document.createElement('div'); txt.className='text';
+  if(pendingReply.text && pendingReply.text.trim()) txt.textContent = pendingReply.text.length>120 ? pendingReply.text.slice(0,120)+'‚Ä¶' : pendingReply.text;
+  else if(pendingReply.imageUrl) txt.textContent = '[imagem]';
+  else txt.textContent = '(sem conte√∫do)';
+  const cancel = document.createElement('button'); cancel.className='btn btn-plain'; cancel.textContent='Cancelar';
+  cancel.style.marginLeft = '8px';
+  cancel.addEventListener('click', ()=> clearReply());
+  replyPreview.appendChild(who);
+  replyPreview.appendChild(txt);
+  replyPreview.appendChild(cancel);
+}
+
+/* send text (includes reply if set) */
 btnSend.addEventListener('click', async ()=>{
-  if(!currentUser || !activePeer) return toast('Selecione um chat e faÁa login');
+  if(!currentUser || !activePeer) return toast('Selecione um chat e fa√ßa login');
   const text = (inputText.value||'').trim();
-  if(!text) return;
+  if(!text && !pendingFileLocal) return;
   const chatId = [currentUser, activePeer].sort().join('__');
   const avatarForMsg = profileCache[currentUser]?.avatar || '';
   try{
-    await db.collection('chats').doc(chatId).collection('messages').add({
-      from: currentUser, to: activePeer, text, avatar: avatarForMsg, imageUrl: '', ts: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    playSendSound();
+    const msg = {
+      from: currentUser,
+      to: activePeer,
+      text: text || '',
+      avatar: avatarForMsg,
+      imageUrl: '',
+      ts: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if(pendingReply){
+      msg.replyToId = pendingReply.id;
+      msg.replySnapshot = { id: pendingReply.id, from: pendingReply.from, text: pendingReply.text || '', imageUrl: pendingReply.imageUrl || '', deleted: false };
+    }
+    // if there's a local image pending, upload via supabase first
+    if(pendingFileLocal){
+      const ext = (pendingFileLocal.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `chats/${chatId}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabaseClient.storage.from('project').upload(path, pendingFileLocal, { cacheControl: '3600', upsert: false });
+      if(uploadError) throw uploadError;
+      const { data } = supabaseClient.storage.from('project').getPublicUrl(path);
+      const imageUrl = data?.publicUrl;
+      if(!imageUrl) throw new Error('N√£o foi poss√≠vel obter publicUrl');
+      msg.imageUrl = imageUrl;
+      // clear local preview
+      try{ URL.revokeObjectURL(composerPreviewImg.firstChild && composerPreviewImg.firstChild.src); }catch(e){}
+      composerPreviewImg.innerHTML = '';
+      composerPreviewImg.style.display = 'none';
+      pendingFileLocal = null;
+    }
+    const docRef = await db.collection('chats').doc(chatId).collection('messages').add(msg);
+    try{ playSendSound(); }catch(e){}
     inputText.value = '';
+    clearReply();
     updateComposer();
   }catch(e){
     console.error('send text err', e);
@@ -758,187 +1111,55 @@ btnSend.addEventListener('click', async ()=>{
   }
 });
 inputText.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); btnSend.click(); }});
-function updateComposer(){ btnSend.disabled = !(currentUser && activePeer && (inputText.value && inputText.value.trim().length>0)); }
+function updateComposer(){ btnSend.disabled = !(currentUser && activePeer && ((inputText.value && inputText.value.trim().length>0) || pendingFileLocal)); }
 
-/* ========== attach image (Supabase) - preview + upload + insert message ========= */
+/* attach image via Supabase (preview in composer) */
 btnAttach.addEventListener('click', ()=> {
-  if(!currentUser) return toast('FaÁa login');
+  if(!currentUser) return toast('Fa√ßa login');
   if(!activePeer) return toast('Abra um chat');
   inputFile.click();
 });
-
 inputFile.addEventListener('change', ()=> {
   const f = inputFile.files && inputFile.files[0];
   if(!f) return;
   pendingFileLocal = f;
-  showComposerPreviewSupabase(f);
+  showComposerImagePreview(f);
 });
-
-function clearComposerPreviewSupabase(){ 
-  pendingFileLocal = null; 
-  composerPreview.innerHTML=''; 
-  composerPreview.style.display='none'; 
-  inputFile.value=''; 
-  updateComposer(); 
-}
-
-function showComposerPreviewSupabase(file){
-  composerPreview.innerHTML = '';
-  composerPreview.style.display = 'flex';
-  composerPreview.className = 'preview';
+function showComposerImagePreview(file){
+  composerPreviewImg.innerHTML = '';
+  composerPreviewImg.style.display = 'block';
   const thumb = document.createElement('img'); thumb.src = URL.createObjectURL(file);
   thumb.style.width = '84px'; thumb.style.height = '84px'; thumb.style.objectFit = 'cover'; thumb.style.borderRadius = '8px';
-  const info = document.createElement('div'); info.style.display='flex'; info.style.flexDirection='column'; info.style.gap='8px'; info.style.marginLeft='10px';
-  const btnConfirm = document.createElement('button'); btnConfirm.className='btn btn-send'; btnConfirm.textContent='Enviar imagem';
-  const btnCancel = document.createElement('button'); btnCancel.className='btn btn-plain'; btnCancel.textContent='Cancelar';
-  const progress = document.createElement('div'); progress.style.width='200px'; progress.style.height='8px'; progress.style.background='#0b0b0b'; progress.style.borderRadius='8px'; progress.style.marginTop='8px'; progress.style.overflow='hidden';
-  const progBar = document.createElement('div'); progBar.style.height='100%'; progBar.style.width='0%'; progBar.style.background='#fff'; progBar.style.transition = 'width .2s linear';
-  progress.appendChild(progBar);
-  info.appendChild(btnConfirm); info.appendChild(btnCancel); info.appendChild(progress);
-  composerPreview.appendChild(thumb); composerPreview.appendChild(info);
-
-  btnCancel.addEventListener('click', ()=> { 
+  const cancel = document.createElement('button'); cancel.className='btn btn-plain'; cancel.textContent='Remover';
+  cancel.addEventListener('click', ()=> {
     try{ URL.revokeObjectURL(thumb.src); }catch(e){}
-    clearComposerPreviewSupabase(); 
+    composerPreviewImg.innerHTML = '';
+    composerPreviewImg.style.display = 'none';
+    pendingFileLocal = null;
+    updateComposer();
   }, { once: true });
-
-  btnConfirm.addEventListener('click', async ()=>{
-    if(!pendingFileLocal || !currentUser || !activePeer){ toast('CondiÁ„o inv·lida'); clearComposerPreviewSupabase(); return; }
-    btnConfirm.disabled = true; btnCancel.disabled = true; btnConfirm.textContent = 'Enviando...';
-    progBar.style.width = '8%'; // visual feedback
-
-    try{
-      const chatId = [currentUser, activePeer].sort().join('__');
-      const ext = (pendingFileLocal.name.split('.').pop() || 'jpg').toLowerCase();
-      const path = `chats/${chatId}/${Date.now()}.${ext}`;
-
-      const { error: uploadError } = await supabaseClient.storage.from('project').upload(path, pendingFileLocal, { cacheControl: '3600', upsert: false });
-      if(uploadError) throw uploadError;
-
-      const { data } = supabaseClient.storage.from('project').getPublicUrl(path);
-      const imageUrl = data?.publicUrl;
-      if(!imageUrl) throw new Error('N„o foi possÌvel obter publicUrl do Supabase');
-
-      const avatarForMsg = profileCache[currentUser]?.avatar || '';
-      await db.collection('chats').doc(chatId).collection('messages').add({
-        from: currentUser, to: activePeer, text: '', avatar: avatarForMsg, imageUrl: imageUrl, ts: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      progBar.style.width = '100%';
-      playSendSound();
-      try{ URL.revokeObjectURL(thumb.src); }catch(e){}
-      clearComposerPreviewSupabase();
-    }catch(err){
-      console.error('Erro ao enviar imagem (Supabase):', err);
-      btnConfirm.disabled = false; btnCancel.disabled = false; btnConfirm.textContent = 'Enviar imagem';
-      progBar.style.width = '0%';
-      alert('Erro ao enviar imagem: ' + (err && err.message ? err.message : JSON.stringify(err)));
-    }
-  }, { once: true });
+  composerPreviewImg.appendChild(thumb);
+  composerPreviewImg.appendChild(cancel);
+  updateComposer();
 }
 
-/* ========== Stories (upload + viewer) ========= */
-const STORY_TTL_MS = 120000; // 2 minutes
-
-btnStories.addEventListener('click', ()=> {
-  if(!currentUser){ toast('FaÁa login para ver stories'); return; }
-  storiesModal.style.display = 'flex';
-  loadActiveStories();
+/* hide popup when clicking outside */
+document.addEventListener('click', (e)=>{
+  if(msgActionPopup.style.display === 'none') return;
+  if(!msgActionPopup.contains(e.target)) hideMsgActionPopup();
 });
+window.addEventListener('resize', hideMsgActionPopup);
 
-closeStories.addEventListener('click', ()=> storiesModal.style.display = 'none');
-storiesModal.addEventListener('click', (e)=> { if(e.target === storiesModal) storiesModal.style.display='none'; });
-
-btnAddStory.addEventListener('click', ()=> {
-  if(!currentUser){ toast('FaÁa login'); return; }
-  storyFile.click();
-});
-
-storyFile.addEventListener('change', async ()=>{
-  const f = storyFile.files && storyFile.files[0];
-  if(!f) return;
-  try{
-    const ext = (f.name.split('.').pop() || 'jpg').toLowerCase();
-    const path = `stories/${currentUser}/${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabaseClient.storage.from('project').upload(path, f, { cacheControl: '3600', upsert: true });
-    if(uploadError) throw uploadError;
-    const { data } = supabaseClient.storage.from('project').getPublicUrl(path);
-    const imageUrl = data.publicUrl;
-
-    const createdAt = firebase.firestore.FieldValue.serverTimestamp();
-    const expiresAt = firebase.firestore.Timestamp.fromMillis(Date.now() + STORY_TTL_MS);
-    await db.collection('stories').add({ from: currentUser, imageUrl, createdAt, expiresAt });
-
-    toast('Story adicionada (expira em 2 minutos)');
-    storyFile.value = '';
-    loadActiveStories();
-  }catch(e){ console.error('story upload err', e); toast('Erro ao enviar story'); }
-});
-
-async function loadActiveStories(){
-  storiesList.innerHTML = '';
-  const snap = await db.collection('stories').orderBy('createdAt','desc').get();
-  const now = Date.now();
-  const items = [];
-  snap.docs.forEach(d=>{
-    const s = d.data();
-    const until = s.expiresAt ? s.expiresAt.toMillis() : 0;
-    if(until > now){
-      items.push({ id: d.id, ...s, expiresAtMs: until });
-    }
-  });
-
-  if(items.length === 0){
-    storiesList.innerHTML = '<div style="color:var(--muted);padding:8px">Nenhum story ativo</div>';
-    return;
-  }
-
-  items.forEach(st=>{
-    const node = document.createElement('div'); node.className='story-item';
-    const img = document.createElement('img'); img.src = st.imageUrl;
-    const meta = document.createElement('div');
-    const who = document.createElement('div'); who.textContent = st.from;
-    const remain = document.createElement('div'); remain.style.fontSize='12px'; remain.style.color='var(--muted)';
-    const msLeft = st.expiresAtMs - Date.now();
-    remain.textContent = `expira em ${Math.max(0, Math.round(msLeft/1000))}s`;
-    meta.appendChild(who); meta.appendChild(remain);
-    node.appendChild(img); node.appendChild(meta);
-    storiesList.appendChild(node);
-  });
-}
-
-/* optional realtime watcher to refresh stories list periodically */
-function watchStoriesRealtime(){
-  db.collection('stories').onSnapshot(()=> {
-    // refresh if stories modal is open
-    if(storiesModal.style.display === 'flex') loadActiveStories();
-    // Also cleanup expired stories (optional)
-    cleanupExpiredStories();
-  });
-}
-
-async function cleanupExpiredStories(){
-  const snap = await db.collection('stories').get();
-  const now = Date.now();
-  snap.docs.forEach(async d=>{
-    const s = d.data();
-    const until = s.expiresAt ? s.expiresAt.toMillis() : 0;
-    if(until <= now){
-      try{ await d.ref.delete(); }catch(e){ /* ignore */ }
-    }
-  });
-}
-
-/* ========== requests watcher start placeholder ========== */
+/* start watchers if logged */
 function startRequestsIfNeeded(){ if(currentUser) watchRequests(); }
 
-/* ========== debug exposure ========== */
+/* debug exposure */
 window.openChat = openChat;
 window.getProfile = getProfile;
 window.db = db;
 window.supabaseClient = supabaseClient;
 
-/* initial UI state */
+/* initial UI */
 centerMain.classList.add('no-active');
 emptyPlaceholder.style.display = 'flex';
 messagesEl.innerHTML = '';
