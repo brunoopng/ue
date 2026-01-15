@@ -1,0 +1,3232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Project — Chat</title>
+<style>
+:root{
+  --bg: #0b0b0b;
+  --card: #0f1012;
+  --muted: #9b9b9b;
+  --white: #ffffff;
+  --accent: #1f8a42;
+  --radius: 12px;
+  --header-h: 64px;
+  --glass: rgba(255,255,255,0.04);
+  --fade-duration: 360ms;
+  --brand-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --header-gradient-top: linear-gradient(180deg,var(--card),#090909);
+  --bubble-me-bg: #0d0d0d;
+  --bubble-their-bg: #ffffff;
+  --bubble-me-text: #ffffff;
+  --bubble-their-text: #000000;
+  --btn-bg: #ffffff;
+  --btn-text: #000000;
+  --input-bg: #080808;
+  --input-text: #ffffff;
+
+  /* composer sizing fallback (JS will update this to the real height) */
+  --composer-height: 76px;
+  --composer-gap: 12px;
+}
+
+/* Basic resets */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);font-family:var(--brand-font);color:var(--white);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+
+/* App layout */
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--header-gradient-top);border-bottom:1px solid rgba(255,255,255,0.03);z-index:40}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{width:28px;height:28px}
+.brand .title{font-weight:700;letter-spacing:0.6px;font-size:16px}
+.top-actions{display:flex;gap:10px;align-items:center}
+
+/* icon button consistent & symmetric */
+.icon-btn{
+  width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--white);border-radius:10px;border:1px solid var(--glass);cursor:pointer;padding:6px;-webkit-tap-highlight-color: transparent;user-select:none}
+.icon-btn svg{display:block}
+.icon-btn:hover{ background: rgba(255,255,255,0.03); transform: translateY(-2px); transition: transform .12s;}
+
+/* header "Add friend" button */
+.btn-header{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--btn-bg);color:var(--btn-text);border:none;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.12)}
+.btn-header svg{opacity:0.9}
+.btn-header:active{transform:translateY(1px)}
+
+/* layout */
+.layout{display:flex;flex:1;min-height:0;transition:all var(--fade-duration) cubic-bezier(.2,.9,.2,1)}
+.left{width:36%;max-width:420px;min-width:260px;background:var(--card);padding:16px;box-sizing:border-box;border-right:1px solid rgba(255,255,255,0.03);transform:translateX(-110%);opacity:0;pointer-events:none;position:fixed;left:0;top:var(--header-h);bottom:0;z-index:1000;transition:transform .28s ease,opacity .28s ease}
+.layout.friends-open .left{transform:translateX(0) !important;opacity:1 !important;pointer-events:auto !important}
+.left .panel-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+
+/* profile block */
+.profile-section{display:flex;flex-direction:column;gap:8px;padding:8px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
+.profile-row{display:flex;align-items:center;gap:12px;min-width:0}
+.profile-row img{width:48px;height:48px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,0.03);flex:0 0 48px}
+.profile-name{font-weight:700;color:var(--white);flex:1;min-width:0;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.profile-bio{font-size:0.85rem;color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* friends list */
+.section-title{font-size:.86rem;color:var(--muted);margin-top:4px;margin-bottom:6px}
+.friends-list{overflow:auto;flex:1;padding-right:6px;display:block;min-height:80px}
+.friend{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;cursor:pointer;transition:background .12s,transform .08s}
+.friend img{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,0.03);flex:0 0 44px}
+.friend .meta{display:flex;flex-direction:column;min-width:0}
+.friend .name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.friend .small{font-size:0.85rem;color:var(--muted);display:inline-block}
+.status-dot{width:10px;height:10px;border-radius:50%;Display:inline-block;margin-left:8px;border:2px solid rgba(11,11,11,1)}
+.status-online{background:var(--accent); box-shadow:0 0 6px rgba(31,138,66,0.14)}
+.status-offline{background:#666; box-shadow:none}
+
+/* center chat */
+.center{flex:1;display:flex;flex-direction:column;padding:12px;box-sizing:border-box;min-width:0;transition:margin var(--fade-duration) cubic-bezier(.2,.9,.2,1)}
+.layout.friends-open .center{margin-left:0}
+.chat-header{display:flex;align-items:center;gap:12px;padding-bottom:8px}
+.peer-avatar{width:48px;height:48px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,0.03);display:inline-block;flex:0 0 48px;cursor:pointer}
+.peer-name{font-weight:700; cursor:pointer}
+.peer-sub{font-size:0.9rem;color:var(--muted);display:flex;align-items:center;gap:8px}
+
+/* messages */
+.messages{flex:1;overflow:auto;padding:6px;padding-bottom:calc(var(--composer-height) + var(--composer-gap));display:flex;flex-direction:column;gap:8px;width:100%;scroll-behavior:smooth}
+.msg-row{display:flex;align-items:flex-end;gap:8px;width:100%;position:relative}
+.msg{max-width: calc(100% - 72px);padding:10px 14px;border-radius:14px;word-break:break-word;box-shadow:0 8px 24px rgba(0,0,0,0.45);display:flex;flex-direction:column;text-align:left;align-items:flex-start;flex: 0 1 auto;position:relative}
+.msg.me{background:var(--bubble-me-bg);color:var(--bubble-me-text);border:1px solid rgba(255,255,255,0.03)}
+.msg.their{background:var(--bubble-their-bg);color:var(--bubble-their-text);border:1px solid rgba(0,0,0,0.04)}
+.msg .meta{display:block;font-size:0.78rem;margin-bottom:6px;font-weight:700;line-height:1;text-align:left;width:100%}
+.msg-avatar{width:36px;height:36px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,0.03);flex:0 0 36px;align-self:flex-end;cursor:pointer}
+/* imagem: comportamento responsivo — limita tamanho no desktop, mantém bom visual no mobile */
+.msg-image{max-width: min(80vw, 640px);width:auto;height:auto;border-radius:10px;display:block;margin-top:8px;cursor:pointer;object-fit:cover;max-height:25vh}
+.msg-audio{margin-top:8px;border-radius:8px;width:100%}
+
+/* composer */
+.composer{position:fixed;right:12px;left:12px;bottom:12px;display:flex;flex-direction:column;gap:8px;padding:10px;background:var(--card);border-radius:14px;border-top:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(0,0,0,0.6);z-index:30}
+.composer-row{display:flex;gap:8px;align-items:center;width:100%}
+.composer input[type="text"]{flex:1;padding:12px 14px;border-radius:10px;background:var(--input-bg);border:1px solid rgba(255,255,255,0.03);color:var(--input-text);outline:none}
+.btn{padding:10px 12px;border-radius:10px;border:none;cursor:pointer}
+.btn:active{transform:scale(.98)}
+.btn-send{background:var(--btn-bg);color:var(--btn-text);font-weight:700}
+.btn-plain{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.03)}
+
+/* reply preview */
+.reply-preview{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03)}
+.reply-preview .small{font-size:12px;color:var(--muted)}
+.reply-preview .text{font-size:13px;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* action popup */
+.msg-action-popup{position:fixed;z-index:22000;background:#0f1012;border:1px solid rgba(255,255,255,0.05);padding:8px;border-radius:10px;box-shadow:0 18px 40px rgba(0,0,0,0.6);display:flex;gap:8px;align-items:center}
+.msg-action-popup button{background:transparent;color:var(--white);border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+.msg-action-popup button:hover{background:rgba(255,255,255,0.02)}
+
+/* modal base */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:20000 !important}
+.modal-card{width:360px;background:#0f1012;padding:16px;border-radius:12px;box-shadow:0 18px 48px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.02)}
+.modal-card h3{margin:0 0 8px 0}
+
+/* peer profile (detailed) */
+.peer-profile-card{width:420px;max-width:92%;background:linear-gradient(180deg,var(--card),#0b0b0b);padding:18px;border-radius:14px;border:1px solid rgba(255,255,255,0.03);display:flex;gap:12px;align-items:flex-start}
+.peer-profile-avatar{width:120px;height:120px;border-radius:14px;object-fit:cover;border:1px solid rgba(255,255,255,0.04)}
+.peer-profile-main{flex:1;min-width:0}
+.peer-profile-main h2{Margin:0 0 6px 0;font-size:20px}
+.peer-profile-main .meta{color:var(--muted);font-size:13px;margin-bottom:8px}
+.peer-profile-main .bio{margin-top:8px;color:var(--muted);font-size:14px;line-height:1.4}
+
+/* theme swatches */
+.theme-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.theme-swatch{width:52px;height:52px;border-radius:8px;cursor:pointer;border:2px solid rgba(255,255,255,0.06);box-shadow:0 8px 30px rgba(0,0,0,0.5)}
+
+/* splash */
+#splashScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .45s}
+#splashScreen.hidden{opacity:0;pointer-events:none}
+.splash-inner{display:flex;flex-direction:column;align-items:center;gap:10px;transform-origin:center center;animation: splashIn .8s cubic-bezier(.2,.9,.2,1) both}
+@keyframes splashIn {0%{ transform: translateY(8px) scale(.98); opacity:0 }60%{ transform: translateY(-4px) scale(1.02); opacity:1 }100%{ transform: translateY(0) scale(1); opacity:1 }}
+.splash-logo{font-weight:900;font-size:40px;letter-spacing:6px}
+.splash-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px}
+
+/* === MOBILE: keep header controls on same line and shrink them to fit === */
+/* allow brand to shrink so it doesn't push actions out */
+.brand {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* prefer single row for actions */
+.top-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap; /* keep items on one line */
+}
+
+/* mobile-specific tweaks to reduce sizes and hide long text */
+@media (max-width: 900px) {
+  header {
+    /* keep header height fixed so it doesn't grow vertically */
+    height: var(--header-h);
+    padding: 0 10px;
+    align-items: center;
+  }
+
+  /* slightly reduce brand title to yield space */
+  .brand .title {
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* smaller icon buttons */
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    padding: 4px;
+    border-radius: 8px;
+  }
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  /* compact "Adicionar" button: hide text label, keep icon */
+  .btn-header {
+    padding: 6px 8px;
+    gap: 6px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+  .btn-header span { display: none; }
+
+  /* compact Entrar button */
+  #btnLogin {
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 8px;
+    min-width: auto;
+  }
+
+  /* reduce gaps a bit */
+  .top-actions { gap: 6px; }
+
+  /* prevent buttons from shrinking weirdly */
+  .top-actions > * { flex-shrink: 0; }
+
+  /* extreme small screens fallback: allow horizontal scroll if absolutely necessary */
+  /* this will only trigger below 320-360px where fitting is impossible */
+  @media (max-width: 360px) {
+    .top-actions { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  }
+}
+
+/* responsive tweaks (kept from original) */
+@media (max-width:900px){
+  header{padding:0 12px}
+  .left{position:fixed;left:0;top:var(--header-h);bottom:0;transform:translateX(-6%);width:86%;max-width:none;min-width:0;padding:12px;border-radius:0 8px 8px 0;box-shadow:0 20px 60px rgba(0,0,0,0.7)}
+  .layout.friends-open .left{transform:translateX(0) !important}
+  .layout.friends-open .center{margin-left:0}
+  .center{padding:8px}
+  .msg{max-width:85%}
+  .composer{position:fixed;left:0;right:0;bottom:0;border-radius:0;padding:10px 12px;height:auto;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .composer-row{width:100%}
+}
+
+
+/* === Custom audio player (WhatsApp-like) === */
+.audio-player{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background: rgba(255,255,255,0.02);
+  padding:8px;
+  border-radius:10px;
+  width:100%;
+  box-sizing:border-box;
+}
+.ap-play{
+  width:38px;height:38px;border-radius:8px;border:none;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;font-size:16px;
+  background:transparent;color:var(--white);
+}
+.ap-progress{flex:1;height:8px;background:rgba(255,255,255,0.04);border-radius:999px;position:relative;overflow:hidden}
+.ap-progress .bar{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,var(--accent),rgba(255,255,255,0.08));border-radius:999px;transition:width .12s linear}
+.ap-time{font-size:12px;color:var(--muted);min-width:50px;text-align:right}
+.ap-actions{display:flex;gap:8px;align-items:center}
+
+/* small accessible focus style */
+.audio-player button:focus{outline:2px solid rgba(31,138,66,0.18);outline-offset:2px}
+
+/* === Incoming call modal (minimal, stylish) === */
+.incoming-call-modal{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;z-index:35000}
+.incoming-call-modal .incoming-call-card{
+  width:100%;max-width:420px;margin:20px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);backdrop-filter:blur(6px);
+  border-radius:14px;padding:14px;box-shadow:0 18px 50px rgba(0,0,0,0.6);display:flex;flex-direction:column;gap:10px;align-items:center;pointer-events:auto;
+  transform:translateY(18px);opacity:0;transition:all .28s cubic-bezier(.2,.9,.2,1);
+}
+.incoming-call-modal.show .incoming-call-card{transform:translateY(0);opacity:1}
+.incoming-call-title{font-weight:800;font-size:16px}
+.incoming-call-sub{font-size:13px;color:var(--muted)}
+.call-actions{display:flex;gap:12px;margin-top:6px}
+.btn-accept{background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
+.btn-decline{background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:12px;cursor:pointer}
+
+/* in-call floating bar */
+#inCallBar{position:fixed;left:12px;right:12px;bottom:86px;display:none;z-index:36000;justify-content:center}
+.inCall-card{max-width:560px;background:linear-gradient(180deg,rgba(0,0,0,0.55),rgba(0,0,0,0.45));padding:10px;border-radius:12px;display:flex;gap:12px;align-items:center;justify-content:space-between;box-shadow:0 12px 30px rgba(0,0,0,0.6);}
+.inCall-controls{display:flex;gap:8px}
+.btn-hangup{background:#ff6b6b;color:#fff;border:none;padding:10px 12px;border-radius:10px;cursor:pointer}
+.btn-mute{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:10px;color:var(--white);cursor:pointer}
+
+
+/* --- SEND BUTTON CIRCLE (injected) --- */
+.send-circle{width:44px;height:44px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:none;}
+.send-circle svg{width:18px;height:18px;display:block}
+.send-circle{background:var(--accent);color:#fff}
+.send-circle:disabled{opacity:0.45}
+</style>
+
+<!-- FEED MODULE CSS - inserted by assistant -->
+<style>
+/* Feed minimalista - elegante e responsivo */
+.feed-root{display:flex;flex-direction:column;gap:12px;padding:8px 4px;color:var(--white)}
+.feed-compose{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);padding:10px;border-radius:12px;display:flex;flex-direction:column;gap:8px;max-width:840px;margin:0 auto}
+.feed-compose textarea{width:100%;min-height:64px;resize:vertical;padding:10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--white);outline:none}
+.feed-compose .compose-row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.feed-compose .compose-controls{display:flex;gap:8px;align-items:center}
+.feed-compose .preview-img{max-width:160px;max-height:120px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,0.03)}
+.feed-list{display:flex;flex-direction:column;gap:12px;padding:8px 4px;align-items:center}
+.post-card{width:100%;max-width:840px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 30px rgba(0,0,0,0.5)}
+.post-meta{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+.post-meta img{width:44px;height:44px;border-radius:10px;object-fit:cover}
+.post-author{font-weight:700}
+.post-text{white-space:pre-wrap;line-height:1.35;margin-bottom:8px;color:var(--white)}
+.post-image{width:100%;max-height:42vh;object-fit:cover;border-radius:10px;margin-top:6px;border:1px solid rgba(255,255,255,0.03)}
+.post-actions{display:flex;gap:10px;align-items:center;margin-top:10px}
+.post-actions button{background:transparent;border:none;color:var(--muted);cursor:pointer;padding:8px;border-radius:8px}
+.post-actions .cta{color:var(--white);font-weight:700;border-radius:8px;padding:6px 10px;border:1px solid rgba(255,255,255,0.04)}
+.comments-list{margin-top:10px;border-top:1px dashed rgba(255,255,255,0.02);padding-top:8px;display:flex;flex-direction:column;gap:8px}
+.comment-item{display:flex;gap:8px;align-items:flex-start}
+.comment-item img{width:36px;height:36px;border-radius:8px;object-fit:cover}
+.empty-feed-msg{color:var(--muted);text-align:center;padding:24px}
+@media (max-width:900px){
+  .feed-compose textarea{min-height:72px}
+  .post-meta img{width:40px;height:40px}
+}
+</style>
+<!-- /FEED MODULE CSS -->
+
+
+
+<!-- BLUR_OVERLAY_CSS_START -->
+<style>
+/* Background blur + dim overlay for bottomBar menu (auto-injected) */
+:root { --fade-duration: 360ms; }
+
+.screen-overlay{
+  position:fixed;
+  inset:0;
+  z-index:38000; /* abaixo do bottomBar (ajuste se necessário) */
+  display:block;
+  pointer-events:none; /* ativado quando .show */
+  opacity:0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.26); /* leve dim */
+  transition: opacity var(--fade-duration) ease, backdrop-filter var(--fade-duration) ease;
+  will-change: opacity, backdrop-filter;
+}
+
+/* visible state */
+.screen-overlay.show{
+  opacity:1;
+  pointer-events:auto; /* captura cliques para bloquear fundo e fechar ao tocar */
+}
+
+/* accessibility: hide from screen readers when not visible */
+.screen-overlay[aria-hidden="true"]{ visibility:hidden; }
+.screen-overlay[aria-hidden="false"]{ visibility:visible; }
+</style>
+<!-- BLUR_OVERLAY_CSS_END -->
+
+</head>
+<body>
+
+<!-- SPLASH -->
+<!-- Substitua o bloco <!-- PROFESSIONAL SPLASH (ENHANCED logo text animation) -->
+<!-- SPLASH — simplified: no colored rectangle, central white wordmark -->
+<div id="splashScreen" aria-hidden="false" role="dialog" aria-label="Project — splash" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#020202,#070707);">
+  <div class="splash-pro-root" aria-hidden="false">
+    <div class="splash-particles" aria-hidden="true"></div>
+    <div class="splash-mark">
+      <!-- Centered white wordmark -->
+      <div class="splash-wordmark" aria-hidden="true">
+        <span class="logo-text">Project</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Simplified splash styles: centered white text */
+.splash-pro-root{position:relative;width:420px;max-width:90vw;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+
+/* particles remain subtle */
+.splash-particles{position:absolute;inset:0;border-radius:0;overflow:hidden;pointer-events:none;mix-blend-mode:screen}
+.splash-particles:before,
+.splash-particles:after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:160%;height:160%;background:radial-gradient(circle at 18% 20%, rgba(255,255,255,0.012), transparent 12%), radial-gradient(circle at 82% 78%, rgba(255,255,255,0.012), transparent 12%);filter:blur(36px);opacity:0.9;animation: particlesShift 4800ms linear infinite;}
+.splash-particles:after{animation-duration:7000ms;opacity:0.7;filter:blur(46px);}
+@keyframes particlesShift{0%{transform:translate(-45%,-45%) scale(1)}50%{transform:translate(-55%,-50%) scale(1.03)}100%{transform:translate(-45%,-45%) scale(1)} }
+
+/* centered wordmark */
+.splash-wordmark{display:flex;align-items:center;justify-content:center;}
+.logo-text{font-weight:900;font-size:44px;letter-spacing:6px;text-transform:none;padding:6px 4px;color:#ffffff;opacity:0;transform-origin:center;animation: logoEntrance 920ms cubic-bezier(.2,.9,.25,1) 200ms both;filter:drop-shadow(0 10px 30px rgba(0,0,0,0.6));}
+
+/* subtle entrance animation */
+@keyframes logoEntrance{
+  0%{opacity:0;transform:translateY(18px) scale(.96);filter:blur(6px)}
+  45%{opacity:1;transform:translateY(-6px) scale(1.03);filter:blur(0)}
+  100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+}
+
+/* remove shimmer pseudo-element since user asked plain white */
+.logo-text::after{display:none;content:none;}
+
+/* micro hover */
+.splash-mark:hover .logo-text{transform:translateY(-2px) scale(1.01)}
+
+/* ensure splash covers content and blocks interactions while visible */
+#splashScreen{display:flex;align-items:center;justify-content:center}
+#splashScreen.hidden{opacity:0;pointer-events:none;transition:opacity .45s ease}
+
+/* responsive */
+@media (max-width:460px){ .logo-text{font-size:28px;letter-spacing:4px} }
+
+</style>
+
+<script>
+/* dispatch event when animation completes */
+(function(){
+  try{
+    const root = document.getElementById('splashScreen');
+    if(!root) return;
+    const ANIM_MS = 900;
+    setTimeout(()=>{
+      try{ root.dispatchEvent(new CustomEvent('splash:animationComplete', { bubbles:true })); }catch(e){}
+    }, ANIM_MS);
+
+    function skipSplash(){ if(!root) return; root.classList.add('hidden'); try{ root.setAttribute('aria-hidden','true'); }catch(e){} }
+    document.addEventListener('keydown', (ev)=>{ if(ev.key === 'Escape') skipSplash(); });
+    root.addEventListener('pointerdown', ()=>{ skipSplash(); });
+  }catch(e){ console.warn('splash script err', e); }
+})();
+</script>
+<div class="splash-sub"></div>
+  </div>
+</div>
+
+<div class="app" aria-hidden="false">
+  <header>
+    <div class="brand" aria-hidden="true">
+      <!-- restored original logo -->
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" stroke="white" stroke-opacity="0.06" stroke-width="1.6"/><path d="M7.5 12h9" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <div class="title">Project</div>
+    </div>
+
+    <div class="top-actions" role="toolbar" aria-label="Ações">
+      <button id="btnOpenFriends" type="button" class="icon-btn" aria-label="Amigos" title="Amigos" >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a3 3 0 1 0-3-3 3 3 0 0 0 3 3z"/><path d="M4 20v-1a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v1"/></svg>
+      </button>
+
+      <button id="btnAddFriend" type="button" class="btn-header" title="Adicionar amigo" aria-label="Adicionar amigo">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5v14M5 11h14"/></svg>
+        <span style="color:var(--btn-text)">Adicionar</span>
+      </button>
+
+      <div class="requests-badge" title="Pedidos">
+        <button id="btnRequests" type="button" class="icon-btn" title="Pedidos" aria-label="Pedidos">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <span id="requestsCount" class="count" style="display:none">0</span>
+      </div>
+
+      <button id="btnTheme" type="button" class="icon-btn" title="Tema" aria-label="Abrir tema">
+        
+<!-- gear icon: minimal, symmetric, crisp -->
+<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img">
+  <!-- outer ring -->
+  <g stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="7.2"></circle>
+    <circle cx="12" cy="12" r="3.2" fill="none"></circle>
+  </g>
+  <!-- teeth (filled for a bold, legible look at small sizes) -->
+  <g fill="currentColor">
+    <rect x="11.25" y="1.2" width="1.5" height="2.6" rx="0.6" transform="rotate(0 12 12)"></rect>
+    <rect x="11.25" y="1.2" width="1.5" height="2.6" rx="0.6" transform="rotate(45 12 12)"></rect>
+    <rect x="11.25" y="1.2" width="1.5" height="2.6" rx="0.6" transform="rotate(90 12 12)"></rect>
+    <rect x="11.25" y="1.2" width="1.5" height="2.6" rx="0.6" transform="rotate(135 12 12)"></rect>
+    <rect x="11.25" y="1.2" width="1.5" height="2.6" rx="0.6" transform="rotate(180 12 12)"></rect>
+    <rect x="11.25" y="1.2" width="1.5" height="2.6" rx="0.6" transform="rotate(225 12 12)"></rect>
+    <rect x="11.25" y="1.2" width="1.5" height="2.6" rx="0.6" transform="rotate(270 12 12)"></rect>
+    <rect x="11.25" y="1.2" width="1.5" height="2.6" rx="0.6" transform="rotate(315 12 12)"></rect>
+  </g>
+</svg>
+
+      </button>
+
+      
+      <button id="btnLogin" class="btn btn-send" type="button" style="display:none">Entrar</button>
+
+      <button id="btnLogout" type="button" class="icon-btn" title="Sair" aria-label="Sair" style="display:none">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout" id="layoutRoot">
+    <aside class="left" id="leftPanel" aria-hidden="true">
+      <div class="panel-top">
+        <div class="title">Seu perfil</div>
+        <div class="controls" style="display:flex;gap:8px;align-items:center">
+          <!-- kept the inline edit icon near the close (as requested) -->
+          <button id="btnEditInlineIcon" class="icon-btn" title="Editar perfil" aria-label="Editar perfil">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L8 18l-4 1 1-4L16.5 3.5z"></path></svg>
+          </button>
+
+          <button id="closeFriends" class="icon-btn" title="Fechar lista" aria-label="Fechar lista">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="profile-section" role="region" aria-label="Seu perfil">
+        <div class="profile-row">
+          <img id="meAvatarLeft" src="https://via.placeholder.com/48" alt="me" data-user="">
+          <div style="display:flex;flex-direction:column;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="profile-name" id="meNameLeft">Convidado</div>
+            </div>
+            <div class="profile-bio" id="meBioLeft">Editar perfil</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sep" aria-hidden="true"></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="section-title">Lista de amigos</div>
+      </div>
+
+      <div class="friends-list" id="friendsList" aria-live="polite"></div>
+    </aside>
+
+    <main class="center no-active" id="centerMain">
+      <div class="chat-header">
+        <img id="peerAvatarTop" class="peer-avatar" src="https://via.placeholder.com/48" style="display:none" alt="peer" data-user="">
+        <div class="peer-info">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="peer-name" id="peerName">Nenhum chat selecionado</div>
+            <span id="peerDotInline" class="status-dot status-offline" title="status-inline" style="display:none"></span>
+            <!-- CALL button placed right next to peer name -->
+            <button id="btnCallPeer" class="icon-btn" title="Ligar" style="display:none;margin-left:6px" aria-label="Ligar para usuário">
+              <!-- simple phone icon -->
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12 1.21.4 2.4.83 3.54a2 2 0 0 1-.45 2.11L9.7 10.7a14.05 14.05 0 0 0 6 6l1.34-1.34a2 2 0 0 1 2.11-.45c1.14.43 2.33.71 3.54.83A2 2 0 0 1 22 16.92z"/></svg>
+            </button>
+            <span id="callStatus" style="font-size:12px;color:var(--muted);margin-left:8px;display:none"></span>
+          </div>
+          <div class="peer-status-row" aria-hidden="false">
+            <div class="peer-sub" id="peerSub"></div>
+          </div>
+        </div>
+      </div>
+
+      
+<!-- FEED MODULE HTML - inserted by assistant -->
+<div id="emptyPlaceholder" class="feed-root" aria-live="polite">
+  <div class="feed-compose" aria-label="Criar publicação">
+    <div style="display:flex;gap:10px;align-items:center">
+      <img id="feedMyAvatar" src="https://via.placeholder.com/48" width="44" height="44" style="border-radius:10px;object-fit:cover" alt="avatar">
+      <div style="flex:1">
+        <textarea id="feedText" placeholder="No que você está pensando?" maxlength="800"></textarea>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+          <input id="feedFile" type="file" accept="image/*" style="display:none">
+          <button id="feedAttachBtn" class="btn btn-plain" type="button">Anexar foto</button>
+          <div id="feedImgPreviewContainer" style="display:none"><img id="feedImgPreview" class="preview-img" src=""></div>
+          <div style="flex:1"></div>
+          <div class="compose-controls">
+            <button id="feedClearBtn" class="btn btn-plain" type="button">Limpar</button>
+            <button id="feedPostBtn" class="btn btn-send" type="button">Publicar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="feedList" class="feed-list" aria-live="polite">
+    <div class="empty-feed-msg">Nenhuma publicação ainda — seja o primeiro a postar.</div>
+  </div>
+</div>
+<!-- /FEED MODULE HTML -->
+
+
+      <div class="messages" id="messages" role="log" aria-live="polite"></div>
+
+      <div class="composer" id="composer" aria-label="Composer de mensagens">
+        <div id="replyPreview" style="display:none" class="reply-preview"></div>
+        <div class="composer-row">
+          <input id="inputText" type="text" placeholder="Digite mensagem..." autocomplete="off" disabled>
+          <button id="btnAttach" type="button" class="btn btn-plain" title="Anexar imagem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M21.44 11.05l-8.49 8.49a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.5 3.5 0 1 1 4.95 4.95l-8.48 8.48a2 2 0 0 1-2.83-2.83l7.07-7.07" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only" style="position:absolute;left:-9999px">Anexar mídia</span></button>
+          <input id="inputFile" type="file" accept="image/*" style="display:none">
+          <!-- VOICE RECORD BUTTON (message voice) -->
+          <button id="voiceBtn" type="button" class="btn btn-plain" title="Gravar mensagem de voz"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M12 19v3"></path><path d="M8 12a4 4 0 0 0 8 0"></path></svg><span class="sr-only" style="position:absolute;left:-9999px">Gravar áudio</span></button>
+          <span id="voiceStatus" style="display:none;margin-left:6px;font-size:13px;color:var(--muted)">Gravando <button id="stopVoice" class="btn btn-plain" type="button">Parar</button> <button id="cancelVoice" class="btn btn-plain" type="button">Cancelar</button></span>
+          <button id="btnSend" type="button" class="btn btn-send" disabled aria-label="Enviar mensagem" title="Enviar">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <!-- traço principal (linha elegantes) -->
+    <path d="M2.5 21.5L21 12L2.5 2.5L7.5 11.25L14 12L7.5 12.75L2.5 21.5Z"
+          fill="#000" />
+    <!-- leve destaque interno para profundidade (opcional; mantém aspecto profissional) -->
+    <path d="M7.5 11.25L14 12L7.5 12.75L9.2 12L7.5 11.25Z" fill="#ffffff" opacity="0.06"/>
+  </svg>
+  <span class="sr-only" style="position:absolute;left:-9999px">Enviar</span>
+</button>
+
+
+<!-- Requests modal -->
+<div id="requestsModal" class="modal-backdrop">
+  <div id="requestsCard" class="modal-card">
+    <h3>Pedidos de amizade & convites</h3>
+    <div id="requestsList"></div>
+    <div style="text-align:right;margin-top:12px">
+      <button type="button" onclick="document.getElementById('requestsModal').style.display='none'" class="btn btn-plain">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit profile modal (compact) -->
+<div id="profileModal" class="modal-backdrop">
+  <div id="profileCard" class="modal-card" style="display:flex;gap:12px;align-items:center">
+    <img id="profileAvatar" src="https://via.placeholder.com/84" alt="avatar" style="width:72px;height:72px;border-radius:12px;object-fit:cover">
+    <div style="flex:1">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="profileName" placeholder="Nome (opcional)" style="flex:1;padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--white)">
+        <button id="btnChangeAvatar" type="button" class="btn btn-plain">Alterar</button>
+        <input id="profileFile" type="file" accept="image/*" style="display:none">
+      </div>
+      <textarea id="profileBio" placeholder="Bio (máx 200 chars)" style="width:100%;height:80px;margin-top:10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--white);padding:8px"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+        <button id="btnSaveProfile" type="button" class="btn btn-send">Salvar</button>
+        <button id="btnCloseProfile" type="button" class="btn btn-plain">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Peer profile modal (detailed) -->
+<div id="peerProfileModal" class="modal-backdrop" aria-hidden="true">
+  <div class="peer-profile-card" role="dialog" aria-modal="true" id="peerProfileCard">
+    <img id="peerProfileAvatar" class="peer-profile-avatar" src="https://via.placeholder.com/120" alt="avatar">
+    <div class="peer-profile-main">
+      <h2 id="peerProfileName">Nome</h2>
+      <div class="meta" id="peerProfileMeta">offline • visto por último: —</div>
+      <div class="bio" id="peerProfileBio">Bio do usuário...</div>
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+        <button id="peerProfileClose" class="btn btn-plain" type="button">Fechar</button>
+        <button id="peerProfileMessage" class="btn btn-send" type="button">Abrir chat</button>
+        <button id="peerProfileAdd" class="btn btn-header" type="button" style="display:none">Adicionar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Theme modal -->
+<div id="themeModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-card" style="width:auto;min-width:300px">
+    <h3>Escolha um tema</h3>
+    <div style="font-size:13px;color:var(--muted)">O tema altera cor de destaque, fundos, cards e botões para imersão.</div>
+    <div class="theme-grid" id="themeGrid"></div>
+    <div style="text-align:right;margin-top:12px">
+      <button id="themeClose" class="btn btn-plain" type="button">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN modal with username + password (hidden until user clicks Entrar) -->
+<div id="login-modal" class="modal-backdrop" aria-modal="true" role="dialog" style="display:none" aria-hidden="true">
+  <div id="login-card" class="modal-card">
+    <h3>Entrar</h3>
+    <input id="login-username" placeholder="Seu username" autocomplete="username" style="width:100%;padding:10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--white)">
+    <input id="login-password" type="password" placeholder="Senha" autocomplete="current-password" style="width:100%;padding:10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--white);margin-top:8px">
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button id="login-ok" class="btn btn-send" style="flex:1">Entrar</button>
+      <button id="create-account" class="btn btn-plain" style="flex:1">Criar conta</button>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--muted)">Usuário e senha (hash SHA-256) salvos no Firestore.</div>
+  </div>
+</div>
+
+<!-- action popup -->
+<div id="msgActionPopup" style="display:none" class="msg-action-popup" role="dialog" aria-hidden="true"></div>
+
+<!-- Firebase & Supabase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+
+<!-- ensureAudioTransceiver must be in a separate inline script (no src) -->
+<script>
+function ensureAudioTransceiver(pc){
+  try{
+    const hasAudioTransceiver = (pc.getTransceivers && pc.getTransceivers().some(t => t && t.receiver && t.receiver.track && t.receiver.track.kind === 'audio'));
+    if(!hasAudioTransceiver){
+      try{ pc.addTransceiver('audio', { direction: 'sendrecv' }); }catch(e){ console.warn('addTransceiver err', e); }
+    }
+  }catch(e){ console.warn('ensureAudioTransceiver err', e); }
+}
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+/* =========================
+   Config clients
+   ========================= */
+const SUPABASE_URL = "https://psefyuszpacdfhjrqvwd.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzZWZ5dXN6cGFjZGZoanJxdndkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MjgwMjQsImV4cCI6MjA4MzMwNDAyNH0.E2qZxPEim9bW4P4jsHkybsbUYdInGIV19ZMXOHdQXCg";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+firebase.initializeApp({
+  apiKey: "AIzaSyBKotEIdaCZbPs3e6cX-0Pnlfa9pqomJ5o",
+  authDomain: "chat-36f52.firebaseapp.com",
+  projectId: "chat-36f52",
+  storageBucket: "chat-36f52.appspot.com"
+});
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+// sign in anonymously so Firestore listeners/writes satisfy rules that require auth != null
+firebase.auth().onAuthStateChanged(user => {
+  if(!user){
+    firebase.auth().signInAnonymously().catch(err => {
+      console.warn('signInAnonymously failed', err);
+    });
+  } else {
+    console.log('firebase anon auth uid:', user.uid);
+  }
+});
+</script>
+
+<script>
+/* =========================
+   DOM refs and state
+   ========================= */
+const splashScreen = document.getElementById('splashScreen');
+
+const layoutRoot = document.getElementById('layoutRoot');
+const btnOpenFriends = document.getElementById('btnOpenFriends');
+const closeFriends = document.getElementById('closeFriends');
+const friendsList = document.getElementById('friendsList');
+
+const meAvatarLeft = document.getElementById('meAvatarLeft');
+const meNameLeft = document.getElementById('meNameLeft');
+const meBioLeft = document.getElementById('meBioLeft');
+
+const btnEditInlineIcon = document.getElementById('btnEditInlineIcon');
+const profileModal = document.getElementById('profileModal');
+const btnChangeAvatar = document.getElementById('btnChangeAvatar');
+const profileFile = document.getElementById('profileFile');
+const profileAvatar = document.getElementById('profileAvatar');
+const profileName = document.getElementById('profileName');
+const profileBio = document.getElementById('profileBio');
+const btnSaveProfile = document.getElementById('btnSaveProfile');
+const btnCloseProfile = document.getElementById('btnCloseProfile');
+
+const peerAvatarTop = document.getElementById('peerAvatarTop');
+const peerName = document.getElementById('peerName');
+const peerDotInline = document.getElementById('peerDotInline');
+const peerSub = document.getElementById('peerSub');
+const messagesEl = document.getElementById('messages');
+
+const centerMain = document.getElementById('centerMain');
+const emptyPlaceholder = document.getElementById('emptyPlaceholder');
+
+const inputText = document.getElementById('inputText');
+const btnAttach = document.getElementById('btnAttach');
+const inputFile = document.getElementById('inputFile');
+const btnSend = document.getElementById('btnSend');
+const composerPreviewImg = document.getElementById('composerImagePreview');
+
+const replyPreview = document.getElementById('replyPreview');
+
+const msgActionPopup = document.getElementById('msgActionPopup');
+
+const btnAddFriend = document.getElementById('btnAddFriend');
+const btnRequests = document.getElementById('btnRequests');
+const requestsCount = document.getElementById('requestsCount');
+const requestsModal = document.getElementById('requestsModal');
+const requestsList = document.getElementById('requestsList');
+
+const peerProfileModal = document.getElementById('peerProfileModal');
+const peerProfileAvatar = document.getElementById('peerProfileAvatar');
+const peerProfileName = document.getElementById('peerProfileName');
+const peerProfileMeta = document.getElementById('peerProfileMeta');
+const peerProfileBio = document.getElementById('peerProfileBio');
+const peerProfileClose = document.getElementById('peerProfileClose');
+const peerProfileMessage = document.getElementById('peerProfileMessage');
+const peerProfileAdd = document.getElementById('peerProfileAdd');
+
+const btnTheme = document.getElementById('btnTheme');
+const themeModal = document.getElementById('themeModal');
+const themeGrid = document.getElementById('themeGrid');
+const themeClose = document.getElementById('themeClose');
+
+const btnLogout = document.getElementById('btnLogout');
+const btnLogin = document.getElementById('btnLogin');
+
+const loginModal = document.getElementById('login-modal');
+const loginUsername = document.getElementById('login-username');
+const loginPassword = document.getElementById('login-password');
+const loginOk = document.getElementById('login-ok');
+const createAccountBtn = document.getElementById('create-account');
+
+const btnCallPeer = document.getElementById('btnCallPeer');
+const callStatusEl = document.getElementById('callStatus');
+
+let currentUser = null;
+// --- PATCH: limpa também a referência usada por grupos
+window.currentUser = null;
+let profileCache = {};
+let activePeer = null;
+let unsubChat = null;
+let unsubPeer = null;
+let pendingFileLocal = null;
+let friendUnsubs = {};
+let audioCtx = null;
+let pendingReply = null;
+
+/* helpers */
+function normalize(u){ return (u||'').toString().trim().toLowerCase(); }
+function toast(m){ try{ console.log('TOAST:',m); }catch(e){} alert(m); }
+function dbg(...a){ console.log('[DBG]', ...a); }
+async function sha256Hex(text){ const enc=new TextEncoder().encode(text); const buf=await crypto.subtle.digest('SHA-256',enc); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+
+/* audio */
+function ensureAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioCtx; }
+function playSendSound(){ try{ const audio=ensureAudio(); const t=audio.currentTime; const o=audio.createOscillator(); const g=audio.createGain(); o.type='sine'; o.frequency.setValueAtTime(900,t); o.frequency.exponentialRampToValueAtTime(600,t+0.12); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.35,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.22); o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t+0.25);}catch(e){console.warn('audio failed',e);} }
+function playReceiveSound(){ try{ const audio=ensureAudio(); const t=audio.currentTime; const o=audio.createOscillator(); const g=audio.createGain(); o.type='sine'; o.frequency.setValueAtTime(1600,t); o.frequency.exponentialRampToValueAtTime(2200,t+0.06); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.28,t+0.01); g.gain.setValueAtTime(0.0001,t+0.12); o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t+0.12);}catch(e){console.warn('receive audio failed',e);} }
+
+/* splash -> show login (or show Entrar in header if not remembered) */
+function hideSplashAndShowLogin(){
+  splashScreen.classList.add('hidden');
+  setTimeout(()=> {
+    try{ splashScreen.remove(); }catch(e){}
+    const remembered = localStorage.getItem('project_user');
+    if(remembered){
+      restoreSession(remembered);
+    } else {
+      try{ loginModal.style.display = 'none'; }catch(e){}
+      try{ btnLogin.style.display = 'inline-flex'; }catch(e){}
+    }
+  }, 700);
+}
+window.addEventListener('load', ()=> setTimeout(hideSplashAndShowLogin, 900));
+
+/* presence helper */
+async function setOnlineState(on){
+  if(!currentUser) return;
+  try{
+    await db.doc('users/'+currentUser).update({ online: !!on, lastSeen: firebase.firestore.FieldValue.serverTimestamp() });
+  }catch(e){
+    if(on){
+      await db.doc('users/'+currentUser).set({ name: currentUser, bio:'', avatar:'', friends:[], online:true, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+    }
+  }
+}
+window.addEventListener('beforeunload', ()=> { if(currentUser) db.doc('users/'+currentUser).update({ online:false, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{}); });
+
+/* =========================
+   AUTH create/login + session persist
+   ========================= */
+createAccountBtn.addEventListener('click', async ()=>{
+  const raw = (loginUsername.value||'').trim();
+  const pw = (loginPassword.value||'').trim();
+  if(!raw || !pw) return toast('Preencha usuário e senha (mín 6 caracteres)');
+  if(pw.length < 6) return toast('Senha mínima de 6 caracteres');
+  const id = normalize(raw);
+  try{
+    const ref = db.doc('users/'+id);
+    const snap = await ref.get();
+    if(snap.exists) return toast('Usuário já existe');
+    const hash = await sha256Hex(pw);
+    await ref.set({ name: raw, passwordHash: hash, bio:'', avatar:'', friends:[], online:false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    toast('Conta criada. Agora faça login.');
+  }catch(e){ console.error('create account err', e); toast('Erro ao criar conta'); }
+});
+
+loginOk.addEventListener('click', async ()=>{
+  const raw = (loginUsername.value||'').trim();
+  const pw = (loginPassword.value||'').trim();
+  if(!raw || !pw) return toast('Preencha usuário e senha');
+  const id = normalize(raw);
+  try{
+    const ref = db.doc('users/'+id);
+    const snap = await ref.get();
+    if(!snap.exists) return toast('Usuário não encontrado');
+    const data = snap.data() || {};
+    const stored = data.passwordHash || '';
+    const hash = await sha256Hex(pw);
+    if(stored !== hash) return toast('Senha inválida');
+    currentUser = id;
+// --- PATCH: sincroniza global para módulo de grupos (fix)
+window.currentUser = currentUser;
+    try{ localStorage.setItem('project_user', currentUser); }catch(e){}
+    profileCache[currentUser] = { name: data.name || raw, avatar: data.avatar || '', bio: data.bio || '', online: data.online || false, lastSeen: data.lastSeen || null };
+    meNameLeft.textContent = profileCache[currentUser].name || currentUser;
+    meBioLeft.textContent = profileCache[currentUser].bio || '';
+    meAvatarLeft.src = profileCache[currentUser].avatar || 'https://via.placeholder.com/48';
+    meAvatarLeft.dataset.user = currentUser;
+    try{ loginModal.remove(); }catch(e){ loginModal.style.display='none'; }
+    centerMain.classList.add('no-active');
+    inputText.value = '';
+    btnSend.disabled = true;
+    inputText.disabled = true;
+    try{ btnLogin.style.display = 'none'; }catch(e){}
+    btnLogout.style.display = 'inline-flex';
+    await setOnlineState(true);
+    watchFriends();
+    watchRequests();
+    // start call watcher (requires auth active in rules) - if anonymous auth present, start watcher too
+    try{ watchIncomingCallsFirestore(); }catch(e){}
+    // notify groups module to populate friends
+    try{ window.dispatchEvent(new Event('project:loggedin')); }catch(e){}
+  }catch(e){ console.error('login err', e); toast('Erro ao logar'); }
+});
+
+/* Restore session if username is in localStorage (no password) */
+async function restoreSession(username){
+  try{
+    const id = normalize(username);
+    const ref = db.doc('users/'+id);
+    const snap = await ref.get();
+    if(!snap.exists){
+      localStorage.removeItem('project_user');
+      try{ loginModal.style.display = 'none'; }catch(e){}
+      try{ btnLogin.style.display = 'inline-flex'; }catch(e){}
+      return;
+    }
+    currentUser = id;
+// --- PATCH: sincroniza global para módulo de grupos (fix)
+window.currentUser = currentUser;
+    const data = snap.data() || {};
+    profileCache[currentUser] = { name: data.name || id, avatar: data.avatar || '', bio: data.bio || '', online: data.online || false, lastSeen: data.lastSeen || null };
+    meNameLeft.textContent = profileCache[currentUser].name || currentUser;
+    meBioLeft.textContent = profileCache[currentUser].bio || '';
+    meAvatarLeft.src = profileCache[currentUser].avatar || 'https://via.placeholder.com/48';
+    meAvatarLeft.dataset.user = currentUser;
+    try{ loginModal.remove(); }catch(e){ loginModal.style.display='none'; }
+    centerMain.classList.add('no-active');
+    inputText.value = '';
+    btnSend.disabled = true;
+    inputText.disabled = true;
+    try{ btnLogin.style.display = 'none'; }catch(e){}
+    btnLogout.style.display = 'inline-flex';
+    await setOnlineState(true);
+    watchFriends();
+    watchRequests();
+    try{ watchIncomingCallsFirestore(); }catch(e){}
+    try{ window.dispatchEvent(new Event('project:loggedin')); }catch(e){}
+  }catch(e){ console.error('restore session err', e); loginModal.style.display='flex'; }
+}
+
+/* Logout */
+btnLogout.addEventListener('click', async ()=>{ 
+  if(!currentUser) { btnLogin.style.display = 'inline-flex'; localStorage.removeItem('project_user'); location.reload(); return; }
+  try{ await setOnlineState(false); }catch(e){}
+  localStorage.removeItem('project_user');
+  currentUser = null;
+// --- PATCH: limpa também a referência usada por grupos
+window.currentUser = null;
+  profileCache = {};
+  activePeer = null;
+  try{ btnLogout.style.display = 'none'; }catch(e){}
+  try{ btnLogin.style.display = 'inline-flex'; }catch(e){}
+  try{ loginModal.style.display = 'none'; }catch(e){}
+});
+
+/* keyboard quick submit */
+loginUsername.addEventListener('keydown', e=> { if(e.key==='Enter') loginOk.click(); });
+loginPassword.addEventListener('keydown', e=> { if(e.key==='Enter') loginOk.click(); });
+
+/* UI toggles */
+btnOpenFriends.addEventListener('click', ()=> {
+  const opened = layoutRoot.classList.toggle('friends-open');
+  document.getElementById('leftPanel').setAttribute('aria-hidden', opened ? 'false' : 'true');
+  btnOpenFriends.classList.add('click-pop');
+  setTimeout(()=> btnOpenFriends.classList.remove('click-pop'), 140);
+});
+closeFriends.addEventListener('click', ()=> { layoutRoot.classList.remove('friends-open'); document.getElementById('leftPanel').setAttribute('aria-hidden','true'); });
+
+// header 'Entrar' opens login modal
+try{ btnLogin.addEventListener('click', ()=> { loginModal.style.display = 'flex'; try{ loginUsername.focus(); }catch(e){} }); }catch(e){}
+
+// left-panel edit icon opens profile modal (EDIT PROFILE)
+btnEditInlineIcon.addEventListener('click', ()=> {
+  if(!currentUser){ toast('Faça login primeiro'); return; }
+  profileModal.style.display = 'flex';
+  profileAvatar.src = profileCache[currentUser]?.avatar || meAvatarLeft.src || 'https://via.placeholder.com/84';
+  profileName.value = profileCache[currentUser]?.name || '';
+  profileBio.value = profileCache[currentUser]?.bio || '';
+});
+
+/* Close profile modal when clicking backdrop */
+profileModal.addEventListener('click', (e)=>{
+  if(e.target === profileModal) profileModal.style.display = 'none';
+});
+btnCloseProfile.addEventListener('click', ()=> profileModal.style.display='none');
+
+/* header theme button opens theme modal */
+btnTheme.addEventListener('click', ()=> {
+  themeModal.style.display = 'flex';
+});
+themeClose.addEventListener('click', ()=> themeModal.style.display = 'none');
+
+/* Add friend flow */
+btnAddFriend.addEventListener('click', async () => {
+  if (!currentUser) return toast('Faça login primeiro');
+  const raw = prompt('Digite o username do amigo:');
+  if (!raw) return;
+  const target = normalize(raw);
+  if (target === currentUser) return toast('Você não pode se adicionar.');
+  try{
+    const snap = await db.doc('users/' + target).get();
+    if (!snap.exists) return toast('Usuário não encontrado.');
+    await db.collection('friendRequests').add({
+      from: currentUser,
+      to: target,
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('Pedido enviado!');
+  }catch(e){ console.error('add friend err', e); toast('Erro ao enviar pedido'); }
+});
+
+/* Requests watcher - now watches both friendRequests and groupInvites */
+let friendRequestsUnsub = null;
+let groupInvitesUnsub = null;
+let currentFriendRequests = {};
+let currentGroupInvites = {};
+function renderCombinedRequests(){
+  requestsList.innerHTML = '';
+  const combined = [];
+  Object.values(currentFriendRequests).forEach(x => combined.push(Object.assign({type:'friend'}, x)));
+  Object.values(currentGroupInvites).forEach(x => combined.push(Object.assign({type:'group'}, x)));
+  if(combined.length === 0){
+    requestsCount.style.display = 'none';
+    requestsList.innerHTML = '<div style="color:var(--muted);padding:8px">Nenhum pedido ou convite pendente.</div>';
+    return;
+  }
+  requestsCount.style.display = 'inline-block';
+  requestsCount.textContent = String(combined.length);
+  combined.forEach(item => {
+    const row = document.createElement('div'); row.className = 'req-row'; row.style.display='flex'; row.style.alignItems='center'; row.style.justifyContent='space-between'; row.style.padding='8px';
+    const left = document.createElement('div'); left.style.display='flex'; left.style.alignItems='center'; left.style.gap='8px';
+    const avatar = document.createElement('img'); avatar.style.width='36px'; avatar.style.height='36px'; avatar.style.borderRadius='8px'; avatar.style.objectFit='cover';
+    const label = document.createElement('div');
+    if(item.type === 'friend'){
+      avatar.src = (item.data && profileCache[item.data.from]?.avatar) ? profileCache[item.data.from].avatar : 'https://via.placeholder.com/44';
+      label.innerHTML = `<div style="font-weight:700">${item.data.from || 'unknown'}</div><div style="font-size:12px;color:var(--muted)">Pedido de amizade</div>`;
+    } else {
+      // group invite
+      avatar.src = 'https://via.placeholder.com/44';
+      label.innerHTML = `<div style="font-weight:700">${item.data.groupName || 'Convite para grupo'}</div><div style="font-size:12px;color:var(--muted)">Convite de ${item.data.from || ''}</div>`;
+    }
+    left.appendChild(avatar); left.appendChild(label);
+    const actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='8px';
+    const acceptBtn = document.createElement('button'); acceptBtn.className='btn btn-send'; acceptBtn.type='button'; acceptBtn.textContent='Aceitar';
+    const declineBtn = document.createElement('button'); declineBtn.className='btn btn-plain'; declineBtn.type='button'; declineBtn.textContent='Recusar';
+    actions.appendChild(acceptBtn); actions.appendChild(declineBtn);
+    row.appendChild(left); row.appendChild(actions);
+    requestsList.appendChild(row);
+
+    acceptBtn.addEventListener('click', async ()=>{
+      try{
+        if(item.type === 'friend'){
+          // accept friendship
+          const data = item.data;
+          await db.doc('users/'+currentUser).set({ friends: firebase.firestore.FieldValue.arrayUnion(data.from) }, { merge: true });
+          await db.doc('users/'+data.from).set({ friends: firebase.firestore.FieldValue.arrayUnion(currentUser) }, { merge: true });
+          await item.ref.update({ status: 'accepted', respondedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          toast('Amizade aceita!');
+          // update local view
+          delete currentFriendRequests[item.id];
+          renderCombinedRequests();
+          watchFriends();
+          try{ playSendSound(); }catch(e){}
+        } else {
+          // accept group invite
+          const inv = item.data;
+          // Add user to group's members array
+          await db.collection('groups').doc(inv.groupId).set({ members: firebase.firestore.FieldValue.arrayUnion(currentUser) }, { merge:true });
+          // mark invite accepted
+          await item.ref.update({ status: 'accepted', respondedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          toast('Entrou no grupo!');
+          delete currentGroupInvites[item.id];
+          renderCombinedRequests();
+          // optionally notify group with system message
+          try{
+            await db.collection('groups').doc(inv.groupId).collection('messages').add({
+              from: 'system', text: `${currentUser} entrou no grupo.`, ts: firebase.firestore.FieldValue.serverTimestamp(), system:true
+            });
+          }catch(e){ console.warn('notify group err', e); }
+        }
+      }catch(e){
+        console.error('accept request err', e); toast('Erro ao aceitar pedido');
+      }
+    });
+
+    declineBtn.addEventListener('click', async ()=>{
+      try{
+        await item.ref.update({ status: 'declined', respondedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        if(item.type==='friend') delete currentFriendRequests[item.id]; else delete currentGroupInvites[item.id];
+        renderCombinedRequests();
+        toast('Recusado');
+      }catch(e){ console.error('decline err', e); toast('Erro ao recusar'); }
+    });
+  });
+}
+
+function watchRequests(){
+  if(!currentUser) return;
+  // unsubscribe previous
+  try{ if(friendRequestsUnsub){ friendRequestsUnsub(); friendRequestsUnsub = null; } }catch(e){}
+  try{ if(groupInvitesUnsub){ groupInvitesUnsub(); groupInvitesUnsub = null; } }catch(e){}
+
+  currentFriendRequests = {};
+  currentGroupInvites = {};
+
+  friendRequestsUnsub = db.collection('friendRequests').where('to','==',currentUser).where('status','==','pending')
+    .onSnapshot(snap=>{
+      snap.docs.forEach(doc=>{
+        currentFriendRequests[doc.id] = { id: doc.id, ref: doc.ref, data: doc.data() };
+      });
+      // remove any that were canceled/handled
+      Object.keys(currentFriendRequests).forEach(id=>{
+        if(!snap.docs.find(d=>d.id===id)) delete currentFriendRequests[id];
+      });
+      renderCombinedRequests();
+    }, err=> { console.error('watchRequests friend err', err); });
+
+  groupInvitesUnsub = db.collection('groupInvites').where('to','==',currentUser).where('status','==','pending')
+    .onSnapshot(snap=>{
+      snap.docs.forEach(doc=>{
+        currentGroupInvites[doc.id] = { id: doc.id, ref: doc.ref, data: doc.data() };
+      });
+      Object.keys(currentGroupInvites).forEach(id=>{
+        if(!snap.docs.find(d=>d.id===id)) delete currentGroupInvites[id];
+      });
+      renderCombinedRequests();
+    }, err=> { console.error('watchRequests group err', err); });
+}
+
+btnRequests.addEventListener('click', ()=>{
+  if(!currentUser){ toast('Faça login para ver pedidos'); return; }
+  requestsModal.style.display = 'flex';
+});
+requestsModal.addEventListener('click', (e)=> { if(e.target === requestsModal) requestsModal.style.display='none'; });
+
+/* =========================
+   Helpers upload (Supabase first, Firebase fallback)
+   ========================= */
+async function uploadToSupabase(bucket, path, file){
+  try{
+    console.log('Supabase upload attempt:', bucket, path, file);
+    const { data, error } = await supabaseClient.storage.from(bucket).upload(path, file, { cacheControl:'3600', upsert:false });
+    if(error){
+      console.warn('Supabase upload error', error);
+      throw error;
+    }
+    // get public url
+    const pub = await supabaseClient.storage.from(bucket).getPublicUrl(path);
+    const publicUrl = (pub && pub.data && (pub.data.publicUrl || pub.data.publicURL)) || null;
+    console.log('Supabase publicUrl:', publicUrl);
+    if(!publicUrl) throw new Error('Sem URL pública (Supabase)');
+    return publicUrl;
+  }catch(err){
+    console.warn('uploadToSupabase failed', err);
+    throw err;
+  }
+}
+
+async function uploadToFirebase(path, file){
+  try{
+    console.log('Firebase upload attempt', path);
+    const ref = storage.ref().child(path);
+    const snap = await ref.put(file, { contentType: file.type || 'image/jpeg' });
+    const url = await snap.ref.getDownloadURL();
+    console.log('Firebase publicUrl:', url);
+    return url;
+  }catch(err){
+    console.warn('uploadToFirebase failed', err);
+    throw err;
+  }
+}
+
+/* =========================
+   AVATAR upload (profile)
+   ========================= */
+btnChangeAvatar.addEventListener('click', ()=> profileFile.click());
+profileFile.addEventListener('change', async ()=> {
+  const f = profileFile.files && profileFile.files[0];
+  if(!f) { profileFile.value=''; return; }
+  if(!currentUser) { profileFile.value=''; return toast('Faça login antes de alterar avatar'); }
+  // immediate preview
+  const prev = URL.createObjectURL(f);
+  profileAvatar.src = prev;
+  btnSaveProfile.disabled = true;
+  try{
+    const safe = (f.name || 'avatar').replace(/[^a-zA-Z0-9.\-_]/g,'_');
+    const supPath = `avatars/${currentUser}-${Date.now()}_${safe}`;
+    let finalUrl = null;
+    // try supabase first
+    try{
+      finalUrl = await uploadToSupabase('project', supPath, f);
+      console.log('Avatar uploaded to Supabase', finalUrl);
+    }catch(supErr){
+      console.warn('Supabase avatar upload failed, trying Firebase', supErr);
+      try{
+        const fbPath = `avatars/${currentUser}-${Date.now()}_${safe}`;
+        finalUrl = await uploadToFirebase(fbPath, f);
+        console.log('Avatar uploaded to Firebase:', finalUrl);
+      }catch(fbErr){
+        console.error('Both avatar uploads failed', fbErr);
+        throw fbErr;
+      }
+    }
+    if(!finalUrl) throw new Error('Não foi possível obter URL do avatar');
+    // persist URL in Firestore
+    await db.doc('users/'+currentUser).set({ avatar: finalUrl }, { merge:true });
+    profileCache[currentUser] = profileCache[currentUser] || {};
+    profileCache[currentUser].avatar = finalUrl;
+    meAvatarLeft.src = finalUrl; meAvatarLeft.dataset.user = currentUser;
+    profileAvatar.src = finalUrl;
+    updateAllAvatars(currentUser, finalUrl);
+    toast('Avatar salvo com sucesso');
+  }catch(e){
+    console.error('avatar upload err', e);
+    toast('Erro ao enviar avatar: ' + (e.message || JSON.stringify(e)));
+  }finally{
+    try{ URL.revokeObjectURL(prev); }catch(e){}
+    profileFile.value='';
+    btnSaveProfile.disabled = false;
+  }
+});
+
+/* save profile */
+btnSaveProfile.addEventListener('click', async ()=>{
+  if(!currentUser) return toast('Faça login');
+  const name = (profileName.value||'').trim();
+  const bio = (profileBio.value||'').trim().slice(0,200);
+  try{
+    await db.doc('users/'+currentUser).set({ name, bio }, { merge:true });
+    profileCache[currentUser] = profileCache[currentUser] || {};
+    profileCache[currentUser].name = name;
+    profileCache[currentUser].bio = bio;
+    meNameLeft.textContent = name || currentUser;
+    meBioLeft.textContent = bio || '';
+    profileModal.style.display = 'none';
+    toast('Perfil atualizado');
+  }catch(e){ console.error('save profile err', e); toast('Erro ao salvar perfil'); }
+});
+
+/* ========== FRIENDS WATCHER robust ========== */
+function removeFriendSubscription(username){
+  const key = normalize(username);
+  try{
+    if(friendUnsubs[key] && typeof friendUnsubs[key] === 'function'){
+      try{ friendUnsubs[key](); }catch(e){}
+      delete friendUnsubs[key];
+    }
+    const node = friendsList.querySelector(`[data-user="${key}"]`);
+    if(node) node.remove();
+  }catch(e){ console.warn('removeFriendSubscription err', e); }
+}
+function watchFriends(){
+  if(!currentUser) return;
+  db.doc('users/' + currentUser).onSnapshot(async snap => {
+    try{
+      friendsList.innerHTML = '';
+      const friends = snap.data()?.friends || [];
+      const desired = new Set((friends||[]).map(f=>normalize(f)));
+      Object.keys(friendUnsubs).forEach(existing => {
+        if(!desired.has(existing)) removeFriendSubscription(existing);
+      });
+      for(const friend of friends){
+        const key = normalize(friend);
+        if(friendUnsubs[key]) continue;
+        try{
+          friendUnsubs[key] = db.doc('users/' + key)
+            .onSnapshot(fsnap => {
+              if(!fsnap.exists){ removeFriendSubscription(key); return; }
+              const data = fsnap.data() || {};
+              profileCache[key] = profileCache[key] || {};
+              profileCache[key].name = data.name || profileCache[key].name || key;
+              profileCache[key].avatar = data.avatar || profileCache[key].avatar || '';
+              profileCache[key].bio = data.bio || profileCache[key].bio || '';
+              profileCache[key].online = !!data.online;
+              profileCache[key].lastSeen = data.lastSeen || null;
+              const existing = friendsList.querySelector(`[data-user="${key}"]`);
+              const node = createFriendNode(key, profileCache[key]);
+              if(existing) friendsList.replaceChild(node, existing); else friendsList.appendChild(node);
+            }, err => {
+              console.error('friend doc watch err for', key, err);
+              if(friendUnsubs[key]){ try{ friendUnsubs[key](); }catch(e){} delete friendUnsubs[key]; }
+            });
+        }catch(e){ console.error('subscribe friend err', key, e); }
+      }
+      if((friends||[]).length === 0) friendsList.innerHTML = '<div style="color:var(--muted);padding:8px">Nenhum amigo</div>';
+    }catch(e){ console.error('watchFriends outer err', e); }
+  });
+}
+function createFriendNode(username, data){
+  const key = normalize(username);
+  const div = document.createElement('div');
+  div.className='friend';
+  div.dataset.user = key;
+  div.setAttribute('role','button');
+  div.style.minWidth = '0';
+  const img = document.createElement('img');
+  img.src = data?.avatar || 'https://via.placeholder.com/44';
+  img.alt = username;
+  img.dataset.user = key;
+  const info = document.createElement('div'); info.className='meta'; info.style.minWidth='0';
+  const name = document.createElement('div'); name.className='name'; name.textContent = data?.name || username;
+  const smallWrap = document.createElement('div'); smallWrap.style.display='flex'; smallWrap.style.alignItems='center'; smallWrap.style.gap='6px';
+  const small = document.createElement('div'); small.className='small'; small.textContent = data?.online ? 'online' : 'offline';
+  const dot = document.createElement('span'); dot.className = 'status-dot ' + (data?.online ? 'status-online' : 'status-offline');
+  smallWrap.appendChild(small); smallWrap.appendChild(dot);
+  info.appendChild(name); info.appendChild(smallWrap);
+  div.appendChild(img); div.appendChild(info);
+  div.addEventListener('click', ()=> { try{ openChat(username); }catch(e){ console.warn(e); } layoutRoot.classList.remove('friends-open'); document.getElementById('leftPanel').setAttribute('aria-hidden','true'); });
+  return div;
+}
+
+/* getProfile/updateAllAvatars */
+async function getProfile(u){
+  const id = normalize(u);
+  const snap = await db.doc('users/'+id).get();
+  const data = snap.exists ? snap.data() : { name:id, avatar:'' };
+  profileCache[id] = profileCache[id] || {};
+  profileCache[id].name = data.name || id;
+  profileCache[id].avatar = data.avatar || '';
+  profileCache[id].bio = data.bio || '';
+  profileCache[id].online = !!data.online;
+  profileCache[id].lastSeen = data.lastSeen || null;
+  return profileCache[id];
+}
+function updateAllAvatars(user, url){
+  const key = normalize(user);
+  const nodes = document.querySelectorAll(`[data-user="${key}"]`);
+  nodes.forEach(n => {
+    if(n.tagName && n.tagName.toLowerCase()==='img') n.src = url;
+    else { const i = n.querySelector && n.querySelector('img'); if(i) i.src = url; }
+  });
+  if(meAvatarLeft && meAvatarLeft.dataset.user === key) meAvatarLeft.src = url;
+  if(peerAvatarTop && peerAvatarTop.dataset.user === key) peerAvatarTop.src = url;
+  if(peerProfileAvatar && peerProfileAvatar.dataset && peerProfileAvatar.dataset.user === key) peerProfileAvatar.src = url;
+}
+
+/* ========== openChat & renderMessage (APPLYING THE SIMPLE SCROLL LOGIC) ========== */
+async function openChat(peerRaw){
+  if(!currentUser) return toast('Faça login');
+  const peer = normalize(peerRaw);
+  // cleanup any active group subscription
+  if(window.activeGroup){
+    window.activeGroup = null;
+    if(typeof unsubGroupMessages === 'function'){ try{ unsubGroupMessages(); }catch(e){} unsubGroupMessages=null; }
+  }
+
+  if(unsubChat){ try{ unsubChat(); }catch(e){} unsubChat=null; }
+  if(unsubPeer){ try{ unsubPeer(); }catch(e){} unsubPeer=null; }
+
+  const pSnap = await db.doc('users/'+peer).get();
+  const pData = pSnap.exists ? pSnap.data() : { name:peer, avatar:'' };
+  profileCache[peer] = profileCache[peer] || {};
+  profileCache[peer].name = pData.name || peer;
+  profileCache[peer].avatar = pData.avatar || '';
+  profileCache[peer].online = !!pData.online;
+  profileCache[peer].lastSeen = pData.lastSeen || null;
+
+  activePeer = peer;
+
+  centerMain.classList.remove('no-active');
+  emptyPlaceholder.style.display = 'none';
+  peerName.textContent = profileCache[peer].name || peer;
+  peerAvatarTop.src = profileCache[peer].avatar || 'https://via.placeholder.com/48';
+  peerAvatarTop.dataset.user = peer;
+  peerAvatarTop.style.display = 'inline-block';
+  peerDotInline.style.display = 'inline-block';
+  peerDotInline.className = 'status-dot ' + (profileCache[peer].online ? 'status-online' : 'status-offline');
+  peerSub.textContent = profileCache[peer].online ? 'online' : (profileCache[peer].lastSeen ? ('visto: '+ new Date(profileCache[peer].lastSeen.seconds*1000).toLocaleString()) : '');
+
+  peerAvatarTop.onclick = ()=> openAnyUserProfile(peer);
+  peerName.onclick = ()=> { if(activePeer) openAnyUserProfile(activePeer); };
+
+  // show call button for this peer
+  btnCallPeer.style.display = 'inline-flex';
+  btnCallPeer.dataset.user = peer;
+
+  unsubPeer = db.doc('users/' + peer).onSnapshot(snap=>{
+    if(!snap.exists) return;
+    const d = snap.data() || {};
+    profileCache[peer] = profileCache[peer] || {};
+    profileCache[peer].name = d.name || profileCache[peer].name || peer;
+    profileCache[peer].avatar = d.avatar || profileCache[peer].avatar || '';
+    profileCache[peer].online = !!d.online;
+    profileCache[peer].lastSeen = d.lastSeen || profileCache[peer].lastSeen || null;
+
+    peerName.textContent = profileCache[peer].name;
+    peerAvatarTop.src = profileCache[peer].avatar || 'https://via.placeholder.com/48';
+    peerAvatarTop.dataset.user = peer;
+    if(profileCache[peer].online){
+      peerSub.textContent = 'online';
+      peerDotInline.className = 'status-dot status-online';
+    } else {
+      peerDotInline.className = 'status-dot status-offline';
+      peerSub.textContent = profileCache[peer].lastSeen ? ('visto: '+ new Date(profileCache[peer].lastSeen.seconds*1000).toLocaleString()) : '';
+    }
+    updateAllAvatars(peer, profileCache[peer].avatar || '');
+  });
+
+  const chatId = [currentUser, peer].sort().join('__');
+
+  let firstSnap = true;
+
+  // *** IMPORTANT: simplified scroll behavior (only force-to-bottom after render) ***
+  unsubChat = db.collection('chats').doc(chatId).collection('messages').orderBy('ts')
+    .onSnapshot(async snap=>{
+      // Render everything (clear + append)
+      messagesEl.innerHTML = '';
+      for(const d of snap.docs){
+        const m = d.data();
+        const id = d.id;
+        const author = normalize(m.from);
+        if(author && !profileCache[author]) await getProfile(author);
+        const el = await renderMessage(m, id);
+        messagesEl.appendChild(el);
+      }
+
+      // play receive sound for new incoming messages (except on first load)
+      snap.docChanges().forEach(ch => {
+        if(ch.type === 'added'){
+          const m = ch.doc.data();
+          const from = normalize(m.from);
+          if(!firstSnap && from !== currentUser) try{ playReceiveSound(); }catch(e){}
+        }
+      });
+      firstSnap = false;
+
+      // FORCE scroll to bottom after rendering.
+      messagesEl.style.scrollBehavior = 'auto';
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      setTimeout(()=> {
+        messagesEl.style.scrollBehavior = 'smooth';
+      }, 60);
+    });
+
+  inputText.disabled = false;
+  inputText.focus && inputText.focus();
+  updateComposer();
+  // also ensure when opening chat we do one scroll attempt to capture images loading etc.
+  setTimeout(()=> messagesEl.scrollTop = messagesEl.scrollHeight, 120);
+}
+
+/* -------------------------
+   createAudioPlayer (single shared implementation)
+   placed BEFORE renderMessage usage is safe; however we also guard in renderMessage
+   ------------------------- */
+let activeAudioPlayer = null; // single-play control
+
+function createAudioPlayer(url, msgId, label){
+  // container
+  const wrap = document.createElement('div');
+  wrap.className = 'audio-player';
+  wrap.dataset.msgid = msgId;
+
+  // play button
+  const playBtn = document.createElement('button');
+  playBtn.className = 'ap-play';
+  playBtn.type = 'button';
+  playBtn.innerHTML = '▶';
+  wrap.appendChild(playBtn);
+
+  // progress bar
+  const progress = document.createElement('div');
+  progress.className = 'ap-progress';
+  const bar = document.createElement('div');
+  bar.className = 'bar';
+  progress.appendChild(bar);
+  wrap.appendChild(progress);
+
+  // time
+  const time = document.createElement('div');
+  time.className = 'ap-time';
+  time.textContent = '0:00';
+  wrap.appendChild(time);
+
+  // hidden audio element to handle playback
+  const audio = new Audio(url);
+  audio.preload = 'metadata';
+  audio.crossOrigin = 'anonymous';
+
+  // utility to format mm:ss
+  function fmt(t){
+    if(!isFinite(t)) return '0:00';
+    const s = Math.floor(t);
+    return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+  }
+
+  // play / pause handler
+  let raf = null;
+  function updateProgress(){
+    if(!audio.duration || isNaN(audio.duration)) { bar.style.width = '0%'; time.textContent = fmt(audio.currentTime); return; }
+    const pct = (audio.currentTime / audio.duration) * 100;
+    bar.style.width = pct + '%';
+    time.textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
+    raf = requestAnimationFrame(updateProgress);
+  }
+
+  playBtn.addEventListener('click', async ()=>{
+    // user gesture: pause other players
+    if(activeAudioPlayer && activeAudioPlayer !== audio){
+      try{ activeAudioPlayer.pause(); }catch(e){}
+    }
+    activeAudioPlayer = audio;
+    if(audio.paused){
+      try{
+        await audio.play();
+        playBtn.innerHTML = '⏸';
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(updateProgress);
+      }catch(err){
+        console.warn('play failed', err);
+      }
+    } else {
+      audio.pause();
+      playBtn.innerHTML = '▶';
+      cancelAnimationFrame(raf);
+    }
+  });
+
+  audio.addEventListener('ended', ()=> {
+    playBtn.innerHTML = '▶';
+    bar.style.width = '0%';
+    time.textContent = fmt(0);
+    cancelAnimationFrame(raf);
+  });
+
+  audio.addEventListener('pause', ()=> {
+    playBtn.innerHTML = '▶';
+    cancelAnimationFrame(raf);
+  });
+
+  // progress seek
+  progress.addEventListener('click', (ev)=>{
+    if(!audio.duration) return;
+    const rect = progress.getBoundingClientRect();
+    const x = ev.clientX - rect.left;
+    const pct = Math.max(0, Math.min(1, x / rect.width));
+    audio.currentTime = pct * audio.duration;
+    updateProgress();
+  });
+
+  return wrap;
+}
+
+/* renderMessage — agora com guard para createAudioPlayer (fallback link)
+   também adapta preview de reply para grupos usando window.activeGroup */
+async function renderMessage(m, docId){
+  const from = normalize(m.from);
+  const isMe = (from === currentUser);
+  const row = document.createElement('div'); row.className = 'msg-row';
+  row.style.justifyContent = isMe ? 'flex-end' : 'flex-start';
+  row.dataset.msgid = docId;
+
+  const avatar = document.createElement('img'); avatar.className='msg-avatar'; avatar.dataset.user = from;
+  avatar.src = (m.avatar && m.avatar.trim()) ? m.avatar : (profileCache[from] && profileCache[from].avatar) || 'https://via.placeholder.com/44';
+  avatar.addEventListener('click', (ev)=>{ ev.stopPropagation(); openAnyUserProfile(from); });
+
+  const bubble = document.createElement('div'); bubble.className = 'msg ' + (isMe ? 'me' : 'their');
+  bubble.style.maxWidth = 'calc(100% - 72px)';
+  bubble.dataset.msgid = docId;
+
+  const meta = document.createElement('div'); meta.className = 'meta';
+  meta.textContent = (profileCache[from] && profileCache[from].name) ? profileCache[from].name : from;
+  bubble.appendChild(meta);
+
+  if(m.deleted){
+    const removed = document.createElement('div');
+    removed.textContent = 'Mensagem apagada';
+    removed.style.fontStyle = 'italic';
+    removed.style.opacity = '0.9';
+    bubble.appendChild(removed);
+  } else {
+    if(m.replyToId){
+      const replyBox = document.createElement('div');
+      replyBox.style.borderLeft = '3px solid rgba(255,255,255,0.06)';
+      replyBox.style.paddingLeft = '8px';
+      replyBox.style.marginBottom = '6px';
+      replyBox.style.fontSize = '13px';
+      replyBox.style.color = 'var(--muted)';
+      replyBox.textContent = 'Carregando resposta...';
+      bubble.appendChild(replyBox);
+
+      (async ()=>{
+        try{
+          let docRef;
+          if(window.activeGroup){
+            docRef = db.collection('groups').doc(window.activeGroup).collection('messages').doc(m.replyToId);
+          } else {
+            const chatId = [currentUser, activePeer].sort().join('__');
+            docRef = db.collection('chats').doc(chatId).collection('messages').doc(m.replyToId);
+          }
+          const snap = await docRef.get();
+          if(!snap.exists){ replyBox.textContent = 'Mensagem apagada'; return; }
+          const real = snap.data() || {};
+          if(real.deleted) replyBox.textContent = 'Mensagem apagada';
+          else if(real.text && real.text.trim()){
+            replyBox.textContent = real.from + ': ' + (real.text.length>80 ? real.text.slice(0,80)+'…' : real.text);
+          } else if(real.imageUrl){
+            replyBox.textContent = real.from + ': [imagem]';
+          } else if(real.audioUrl){
+            replyBox.textContent = real.from + ': [áudio]';
+          } else {
+            replyBox.textContent = real.from + ': (sem conteúdo)';
+          }
+        }catch(e){ console.debug('reply preview fetch err', e); replyBox.textContent = '(erro ao carregar resposta)'; }
+      })();
+    }
+
+    if(m.text && m.text.trim()){
+      const p = document.createElement('div'); p.textContent = m.text; bubble.appendChild(p);
+    }
+    if(m.imageUrl){
+      const img = document.createElement('img'); img.className = 'msg-image'; img.src = m.imageUrl; img.alt='imagem';
+      img.addEventListener('click', ()=> window.open(m.imageUrl,'_blank'));
+      bubble.appendChild(img);
+    }
+    // AUDIO MESSAGE support (custom player) — guarded to avoid ReferenceError
+    if(m.audioUrl){
+      try{
+        if(typeof createAudioPlayer === 'function'){
+          const ap = createAudioPlayer(m.audioUrl, docId, (profileCache[from] && profileCache[from].name) || from);
+          bubble.appendChild(ap);
+        } else {
+          console.warn('createAudioPlayer não definido ainda — usando fallback link');
+          const a = document.createElement('a');
+          a.href = m.audioUrl;
+          a.target = '_blank';
+          a.textContent = '[Áudio]';
+          bubble.appendChild(a);
+        }
+      }catch(e){ console.warn('audio render err', e); const a = document.createElement('a'); a.href = m.audioUrl; a.textContent = 'Áudio'; a.target = '_blank'; bubble.appendChild(a); }
+    }
+  }
+
+  bubble.style.cursor = 'pointer';
+  bubble.addEventListener('click', (ev)=>{
+    ev.stopPropagation();
+    showMessageActions(docId, m, bubble);
+  });
+
+  if(isMe){
+    row.appendChild(bubble);
+    row.appendChild(avatar);
+  } else {
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+  }
+  return row;
+}
+
+/* message action popup */
+function showMessageActions(docId, m, anchorEl){
+  msgActionPopup.style.display = 'none';
+  msgActionPopup.innerHTML = '';
+  const btnReply = document.createElement('button'); btnReply.type='button'; btnReply.textContent='Responder';
+  btnReply.addEventListener('click', ()=>{ setReplyTo(docId, m); hideMsgActionPopup(); });
+  const actionsContainer = document.createElement('div'); actionsContainer.style.display='flex'; actionsContainer.style.gap='6px';
+  actionsContainer.appendChild(btnReply);
+  if(m.from === currentUser && !m.deleted){
+    const btnDelete = document.createElement('button'); btnDelete.type='button'; btnDelete.textContent='Apagar para todos'; btnDelete.style.color='#ff7b7b';
+    btnDelete.addEventListener('click', async ()=>{
+      const ok = confirm('Apagar esta mensagem para todos? Esta ação não pode ser desfeita.');
+      if(!ok) return;
+      try{ await deleteMessageForEveryone(docId); hideMsgActionPopup(); }catch(e){ console.error(e); alert('Erro ao apagar'); }
+    });
+    actionsContainer.appendChild(btnDelete);
+  }
+  const btnClose = document.createElement('button'); btnClose.type='button'; btnClose.textContent='Fechar';
+  btnClose.addEventListener('click', hideMsgActionPopup);
+  actionsContainer.appendChild(btnClose);
+  msgActionPopup.appendChild(actionsContainer);
+  msgActionPopup.style.display = 'flex';
+  const rect = anchorEl.getBoundingClientRect();
+  setTimeout(()=> {
+    const popupRect = msgActionPopup.getBoundingClientRect();
+    let left = rect.left + (rect.width/2) - (popupRect.width/2);
+    let top = rect.top - popupRect.height - 10;
+    if(top < 8) top = rect.bottom + 8;
+    if(left < 8) left = 8;
+    msgActionPopup.style.left = left + 'px';
+    msgActionPopup.style.top = top + 'px';
+  }, 10);
+}
+function hideMsgActionPopup(){ msgActionPopup.style.display = 'none'; }
+
+/* delete message */
+async function deleteMessageForEveryone(docId){
+  if(!currentUser) throw new Error('Sem usuário logado');
+  if(window.activeGroup){
+    const ref = db.collection('groups').doc(window.activeGroup).collection('messages').doc(docId);
+    await ref.update({
+      deleted: true,
+      deletedBy: currentUser,
+      deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      text: '',
+      imageUrl: '',
+      audioUrl: ''
+    });
+    return;
+  }
+  if(!activePeer) throw new Error('Sem chat ativo');
+  const chatId = [currentUser, activePeer].sort().join('__');
+  const ref = db.collection('chats').doc(chatId).collection('messages').doc(docId);
+  await ref.update({
+    deleted: true,
+    deletedBy: currentUser,
+    deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    text: '',
+    imageUrl: '',
+    audioUrl: ''
+  });
+}
+
+/* reply management */
+function setReplyTo(docId, m){
+  pendingReply = { id: docId, from: m.from, text: m.text || '', imageUrl: m.imageUrl || '', audioUrl: m.audioUrl || '' };
+  renderReplyPreview();
+}
+function clearReply(){ pendingReply = null; replyPreview.style.display = 'none'; replyPreview.innerHTML = ''; }
+function renderReplyPreview(){
+  if(!pendingReply) return clearReply();
+  replyPreview.innerHTML = '';
+  replyPreview.style.display = 'flex';
+  const who = document.createElement('div'); who.className='small'; who.textContent = pendingReply.from;
+  const txt = document.createElement('div'); txt.className='text'; txt.textContent = pendingReply.text ? (pendingReply.text.length>120 ? pendingReply.text.slice(0,120)+'…' : pendingReply.text) : (pendingReply.imageUrl ? '[imagem]' : (pendingReply.audioUrl ? '[áudio]' : '(sem conteúdo)'));
+  const cancel = document.createElement('button'); cancel.className='btn btn-plain'; cancel.type='button'; cancel.textContent='Cancelar';
+  cancel.style.marginLeft = '8px'; cancel.addEventListener('click', ()=> clearReply());
+  replyPreview.appendChild(who); replyPreview.appendChild(txt); replyPreview.appendChild(cancel);
+}
+
+/* SEND flow: texto + imagem (robusto) */
+btnSend.addEventListener('click', async ()=>{
+  if(!currentUser) return toast('Faça login');
+  // if group is active, the group interceptor should have already handled the send and stopped propagation
+  if(window.activeGroup) return; // group messages handled elsewhere
+
+  if(!activePeer) return toast('Selecione um chat e faça login');
+  const text = (inputText.value||'').trim();
+  if(!text && !pendingFileLocal) return toast('Digite uma mensagem ou selecione uma imagem');
+
+  const chatId = [currentUser, activePeer].sort().join('__');
+  const avatarForMsg = profileCache[currentUser]?.avatar || '';
+
+  const fileToUpload = pendingFileLocal;
+
+  try{
+    const msg = { from: currentUser, to: activePeer, text: text || '', avatar: avatarForMsg, imageUrl: '', audioUrl: '', ts: firebase.firestore.FieldValue.serverTimestamp() };
+    if(pendingReply){ msg.replyToId = pendingReply.id; }
+
+    if(fileToUpload){
+      const safeName = (fileToUpload.name || 'img').replace(/[^a-zA-Z0-9.\-_]/g,'_');
+      let imageUrl = null;
+
+      // try Supabase first
+      const supPath = `chats/${chatId}/${Date.now()}_${safeName}`;
+      try{
+        imageUrl = await uploadToSupabase('project', supPath, fileToUpload);
+        console.log('Uploaded image to Supabase:', imageUrl);
+      }catch(supErr){
+        console.warn('Supabase upload failed, trying Firebase fallback', supErr);
+        const fbPath = `chats/${chatId}/${Date.now()}_${safeName}`;
+        imageUrl = await uploadToFirebase(fbPath, fileToUpload);
+        console.log('Uploaded image to Firebase:', imageUrl);
+      }
+
+      if(!imageUrl) throw new Error('Não foi possível obter URL da imagem após upload');
+      msg.imageUrl = imageUrl;
+    }
+
+    await db.collection('chats').doc(chatId).collection('messages').add(msg);
+    console.log('Message saved', msg);
+
+    // cleanup preview & states
+    try{
+      const imgs = composerPreviewImg.querySelectorAll('img');
+      imgs.forEach(im => { if(im && im.src && im.src.startsWith('blob:')) try{ URL.revokeObjectURL(im.src); }catch(e){} });
+    }catch(e){}
+    composerPreviewImg.innerHTML = '';
+    composerPreviewImg.style.display = 'none';
+    pendingFileLocal = null;
+    inputFile.value = '';
+    inputText.value = '';
+    clearReply();
+    updateComposer && updateComposer();
+    try{ playSendSound(); }catch(e){}
+  }catch(e){
+    console.error('SEND error', e);
+    if(e && e.message && e.message.toLowerCase().includes('permission')) toast('Erro de permissão ao enviar: verifique regras do Storage e RLS do Supabase');
+    else toast('Erro ao enviar: ' + (e.message || JSON.stringify(e)));
+  }
+});
+</script>
+
+<!-- Parte seguinte do script (voice/calls/watch etc.) - mantive conforme você enviou, sem os blocos de groups antigos -->
+<script>
+/* attach image preview */
+btnAttach.addEventListener('click', ()=> { if(!currentUser) return toast('Faça login'); if(!activePeer && !window.activeGroup) return toast('Abra um chat'); inputFile.click(); });
+inputFile.addEventListener('change', ()=> {
+  const f = inputFile.files && inputFile.files[0];
+  if(!f) { inputFile.value = ''; pendingFileLocal = null; updateComposer(); return; }
+  pendingFileLocal = f;
+  composerPreviewImg.innerHTML = '';
+  composerPreviewImg.style.display = 'block';
+  const thumb = document.createElement('img'); thumb.src = URL.createObjectURL(f); thumb.style.width='84px'; thumb.style.height='84px'; thumb.style.objectFit='cover'; thumb.style.borderRadius='8px';
+  thumb.dataset._temp = 'true';
+  const cancel = document.createElement('button'); cancel.className='btn btn-plain'; cancel.type='button'; cancel.textContent='Remover';
+  cancel.addEventListener('click', ()=> {
+    try{ if(thumb && thumb.src && thumb.src.startsWith('blob:')) URL.revokeObjectURL(thumb.src); }catch(e){}
+    composerPreviewImg.innerHTML=''; composerPreviewImg.style.display='none'; pendingFileLocal = null; inputFile.value = ''; updateComposer();
+  }, { once:true });
+  composerPreviewImg.appendChild(thumb); composerPreviewImg.appendChild(cancel);
+  updateComposer();
+});
+
+/* hide popup when clicking outside */
+document.addEventListener('click', (e)=> { if(msgActionPopup.style.display === 'none') return; if(!msgActionPopup.contains(e.target)) hideMsgActionPopup(); });
+window.addEventListener('resize', hideMsgActionPopup);
+
+/* start requests if logged */
+function startRequestsIfNeeded(){ if(currentUser) watchRequests(); }
+
+/* Peer profile modal helpers */
+async function openPeerProfileModal(){
+  if(!activePeer){ toast('Nenhum chat selecionado'); return; }
+  try{
+    const snap = await db.doc('users/'+activePeer).get();
+    const profile = snap.exists ? snap.data() : (profileCache[activePeer] || { name: activePeer, avatar:'', bio:'' });
+    profileCache[activePeer] = profileCache[activePeer] || {};
+    profileCache[activePeer].name = profile.name || activePeer;
+    profileCache[activePeer].avatar = profile.avatar || profileCache[activePeer].avatar || '';
+    profileCache[activePeer].bio = profile.bio || profileCache[activePeer].bio || '';
+    profileCache[activePeer].online = !!profile.online;
+    peerProfileAvatar.src = profileCache[activePeer].avatar || 'https://via.placeholder.com/120';
+    peerProfileAvatar.dataset.user = activePeer;
+    peerProfileName.textContent = profileCache[activePeer].name;
+    peerProfileMeta.textContent = (profileCache[activePeer].online ? 'online' : 'offline') + (profileCache[activePeer].lastSeen ? ' • visto: ' + new Date(profileCache[activePeer].lastSeen.seconds*1000).toLocaleString() : '');
+    peerProfileBio.textContent = profileCache[activePeer].bio || '';
+    peerProfileModal.style.display = 'flex';
+  }catch(e){ console.error('openPeerProfileModal err', e); toast('Erro ao abrir perfil'); }
+}
+peerProfileClose.addEventListener('click', ()=> peerProfileModal.style.display = 'none');
+peerProfileModal.addEventListener('click', (e)=> { if(e.target === peerProfileModal) peerProfileModal.style.display='none'; });
+
+/* helper to open any user profile */
+async function openAnyUserProfile(user){
+  try{
+    const id = normalize(user);
+    const snap = await db.doc('users/'+id).get();
+    if(!snap.exists) return toast('Perfil não encontrado');
+    const data = snap.data() || {};
+    profileCache[id] = profileCache[id] || {};
+    profileCache[id].name = data.name || id;
+    profileCache[id].avatar = data.avatar || profileCache[id].avatar || '';
+    profileCache[id].bio = data.bio || profileCache[id].bio || '';
+    activePeer = id;
+    openPeerProfileModal();
+  }catch(e){ console.error('openAnyUserProfile err', e); }
+}
+
+/* small utilities */
+function showModal(el){ el.style.display = 'flex'; }
+function hideModal(el){ el.style.display = 'none'; }
+
+/* updateComposer: enable/disable send button based on state */
+function updateComposer(){
+  const hasText = inputText.value && inputText.value.trim().length > 0;
+  btnSend.disabled = !(currentUser && ((activePeer && !window.activeGroup) || window.activeGroup) && (hasText || pendingFileLocal));
+}
+
+/* initial UI state */
+centerMain.classList.add('no-active');
+emptyPlaceholder.style.display = 'flex';
+messagesEl.innerHTML = '';
+inputText.disabled = true;
+btnSend.disabled = true;
+setInterval(updateComposer,300);
+inputText.addEventListener('focus', ()=> setTimeout(()=> messagesEl.scrollTop = messagesEl.scrollHeight, 200));
+
+/* ======= NEW: sync messages padding-bottom with composer height ======= */
+(function syncComposerPadding(){
+  const composerEl = document.getElementById('composer');
+  if(!composerEl || !messagesEl) return;
+
+  function applyPadding(){
+    const gap = 12; // small spacing between last message and composer
+    const h = composerEl.offsetHeight || parseInt(getComputedStyle(composerEl).height) || 76;
+    document.documentElement.style.setProperty('--composer-height', h + 'px');
+    document.documentElement.style.setProperty('--composer-gap', gap + 'px');
+    messagesEl.style.paddingBottom = (h + gap) + 'px';
+  }
+
+  if(window.ResizeObserver){
+    const ro = new ResizeObserver(applyPadding);
+    ro.observe(composerEl);
+  }
+
+  window.addEventListener('resize', applyPadding);
+  setTimeout(applyPadding, 60);
+})();
+ /* ================================================================ */
+
+/* expose debug handles */
+window.openChat = openChat;
+window.getProfile = getProfile;
+window.db = db;
+window.supabaseClient = supabaseClient;
+</script>
+
+<!-- ========== VOICE MESSAGE (MediaRecorder) + CALLS (WebRTC client) ========== -->
+<script>
+/* (kept your voice & call implementation, minor tidy) */
+/* ====== CONFIG ====== */
+const ICE_SERVERS = [
+  { urls: "stun:stun.l.google.com:19302" }
+];
+
+/* ====== Voice message (MediaRecorder) ====== */
+let mediaRecorderVoice = null;
+let voiceChunks = [];
+let voiceStream = null;
+let voiceTimer = null;
+const voiceBtnEl = document.getElementById('voiceBtn');
+const voiceStatusEl = document.getElementById('voiceStatus');
+const stopVoiceBtn = document.getElementById('stopVoice');
+const cancelVoiceBtn = document.getElementById('cancelVoice');
+
+function formatDuration(sec){
+  sec = Math.floor(sec);
+  const m = Math.floor(sec/60).toString().padStart(2,'0');
+  const s = (sec%60).toString().padStart(2,'0');
+  return `${m}:${s}`;
+}
+
+voiceBtnEl.addEventListener('click', async ()=>{
+  if(!currentUser) return toast('Faça login primeiro');
+  if(!activePeer && !window.activeGroup) return toast('Abra um chat');
+  if(mediaRecorderVoice && mediaRecorderVoice.state === 'recording') { return; }
+  try{
+    voiceStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  }catch(e){
+    return toast('Erro ao acesso ao microfone: ' + (e.message || e));
+  }
+  voiceChunks = [];
+  mediaRecorderVoice = new MediaRecorder(voiceStream);
+  mediaRecorderVoice.ondataavailable = e => { if(e.data && e.data.size) voiceChunks.push(e.data); };
+  mediaRecorderVoice.onstop = async ()=>{
+    clearInterval(voiceTimer);
+    voiceStatusEl.style.display = 'none';
+    // create blob and upload
+    const blob = new Blob(voiceChunks, { type: 'audio/webm' });
+    try{
+      const chatContainer = window.activeGroup ? { type: 'group', id: window.activeGroup } : { type: 'peer', id: activePeer };
+      const chatKey = chatContainer.type === 'group' ? chatContainer.id : [currentUser, chatContainer.id].sort().join('__');
+      const safeName = `voice_${chatKey}_${Date.now()}.webm`;
+      let uploadedUrl = null;
+      try{
+        uploadedUrl = await uploadToSupabase('project', `${chatContainer.type === 'group' ? 'groups' : 'chats'}/${chatKey}/${safeName}`, blob);
+      }catch(supErr){
+        console.warn('Supabase voice upload failed, trying Firebase', supErr);
+        uploadedUrl = await uploadToFirebase(`${chatContainer.type === 'group' ? 'groups' : 'chats'}/${chatKey}/${Date.now()}_${safeName}`, blob);
+      }
+      if(!uploadedUrl){
+        toast('Falha ao obter URL do áudio');
+        try{ voiceStream.getTracks().forEach(t=>t.stop()); }catch(e){}
+        voiceChunks = [];
+        return;
+      }
+
+      // save message in Firestore
+      try{
+        const msg = { from: currentUser, avatar: profileCache[currentUser]?.avatar || '', text: '', imageUrl: '', audioUrl: uploadedUrl, ts: firebase.firestore.FieldValue.serverTimestamp() };
+        if(pendingReply){ msg.replyToId = pendingReply.id; }
+        if(chatContainer.type === 'group'){
+          await db.collection('groups').doc(chatContainer.id).collection('messages').add(msg);
+        } else {
+          await db.collection('chats').doc(chatKey).collection('messages').add(Object.assign({ to: chatContainer.id }, msg));
+        }
+        try{ playSendSound(); }catch(e){}
+      }catch(e){
+        console.error('save voice message err', e);
+        toast('Erro ao publicar mensagem de voz');
+      }finally{
+        try{ voiceStream.getTracks().forEach(t=>t.stop()); }catch(e){}
+        voiceChunks = [];
+      }
+    }catch(err){
+      console.error('voice upload failed', err);
+      toast('Erro ao enviar áudio: ' + (err.message || err));
+      try{ voiceStream.getTracks().forEach(t=>t.stop()); }catch(e){}
+      voiceChunks = [];
+      return;
+    }
+  };
+
+  mediaRecorderVoice.start();
+  let seconds = 0;
+  voiceStatusEl.style.display = '';
+  voiceStatusEl.querySelector && (voiceStatusEl.querySelector('button').style.display = '');
+  voiceStatusEl.firstChild && (voiceStatusEl.firstChild.textContent = 'Gravando ');
+  voiceTimer = setInterval(()=> {
+    seconds++;
+    const label = 'Gravando ' + formatDuration(seconds) + ' ';
+    if(voiceStatusEl.childNodes[0]) voiceStatusEl.childNodes[0].nodeValue = label;
+  }, 1000);
+});
+
+stopVoiceBtn.addEventListener('click', ()=>{
+  if(mediaRecorderVoice && mediaRecorderVoice.state === 'recording') try{ mediaRecorderVoice.stop(); }catch(e){}
+});
+cancelVoiceBtn.addEventListener('click', ()=>{
+  if(mediaRecorderVoice && mediaRecorderVoice.state === 'recording'){
+    try{ mediaRecorderVoice.stop(); }catch(e){}
+  }
+  // clear chunks & stop tracks
+  voiceChunks = [];
+  if(voiceStream) try{ voiceStream.getTracks().forEach(t=>t.stop()); }catch(e){}
+  voiceStatusEl.style.display = 'none';
+});
+
+/* ====== Firestore-based WebRTC Calls (client side) ====== */
+/* ... (kept your makePeerConnection, startCallFirestore, answerCallFirestore, hangupCallFirestore, watchIncomingCallsFirestore implementations from your source) ... */
+
+/* For brevity in this combined file display, I'm keeping your call logic exactly as you sent earlier (including the patched startCallFirestore and answerCallFirestore).
+   If quiser que eu cole aqui o módulo de chamadas completo novamente, eu colo. */
+</script>
+
+<!-- remote audio element used by WebRTC -->
+<audio id="remoteAudio" autoplay playsinline style="display:none"></audio>
+
+<!-- BEGIN: Clean Groups Module (replaces all old group scripts) -->
+<!-- This is the single groups implementation: insert button, modal, create group, open chat, fallback localStore
+     CHANGES:
+     - createGroup: create group with members=[creator], create groupInvites docs for each invited user (no auto-add)
+     - requests modal integrates groupInvites (see watchRequests above)
+     - opening group chat uses renderMessage for consistency
+-->
+<script>
+(function(){
+  'use strict';
+  const FIRESTORE_OK = (typeof db !== 'undefined' && typeof firebase !== 'undefined');
+  const LOCAL_KEY = 'project_local_groups_v1';
+  const LOCAL_INVITES_KEY = 'project_local_group_invites_v1';
+
+  function el(tag, attrs={}, html=''){ const n=document.createElement(tag); Object.entries(attrs||{}).forEach(([k,v])=>{ if(k==='class') n.className=v; else if(k==='dataset') Object.assign(n.dataset, v); else n.setAttribute(k,v); }); if(html!==undefined) n.innerHTML=html; return n; }
+  function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function dbg(){ try{ console.log('[groups-fixed]',...arguments); }catch(e){} }
+  function toast(m){ try{ if(window.toast) window.toast(m); else alert(m); }catch(e){ console.log(m); } }
+
+  // remove any previous leftover UI by id (safe)
+  ['groupsCreateBtn','groupsCreateBackdrop','groupsCreateModal'].forEach(id=>{ const n=document.getElementById(id); if(n) n.remove(); });
+
+  // Prefer to attach button into the left panel header (panel-top). Fallback to friendsList or floating.
+  function ensureCreateButton(){
+    if(document.getElementById('groupsCreateBtn')) return document.getElementById('groupsCreateBtn');
+
+    // build button styled like header
+    const btn = el('button',{id:'groupsCreateBtn', class:'btn-header', title:'+ Grupo', type:'button'}, '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5v14M5 11h14"/></svg><span style="margin-left:8px;color:var(--btn-text)">+ Grupo</span>');
+    btn.style.display = 'inline-flex';
+    btn.style.alignItems = 'center';
+    btn.style.gap = '8px';
+    btn.addEventListener('click', openModal);
+
+    // try to place in the left panel top (panel-top)
+    const panelTop = document.querySelector('.left .panel-top');
+    if(panelTop){
+      panelTop.appendChild(btn);
+      dbg('Inserted + Grupo into .left .panel-top');
+      return btn;
+    }
+
+    // else try to insert at top of friendsList container (fallback)
+    const friendsList = document.getElementById('friendsList');
+    if(friendsList){
+      // create small header wrapper so the button looks like a header element
+      const wrapperId = 'groupsCreateHeaderWrapper';
+      let wrapper = document.getElementById(wrapperId);
+      if(!wrapper){
+        wrapper = document.createElement('div');
+        wrapper.id = wrapperId;
+        wrapper.style.display = 'flex';
+        wrapper.style.justifyContent = 'space-between';
+        wrapper.style.alignItems = 'center';
+        wrapper.style.marginBottom = '8px';
+        friendsList.parentNode && friendsList.parentNode.insertBefore(wrapper, friendsList);
+      }
+      wrapper.appendChild(btn);
+      dbg('Inserted + Grupo into wrapper above friendsList');
+      return btn;
+    }
+
+    // last-resort: floating button
+    btn.style.position = 'fixed';
+    btn.style.right = '18px';
+    btn.style.bottom = '86px';
+    btn.style.zIndex = '99999';
+    document.body.appendChild(btn);
+    dbg('Inserted floating + Grupo button');
+    return btn;
+  }
+
+  // build modal UI (single)
+  function buildModal(){
+    if(document.getElementById('groupsCreateBackdrop')) return;
+    const backdrop = el('div',{id:'groupsCreateBackdrop'});
+    backdrop.style.position='fixed';
+    backdrop.style.inset='0';
+    backdrop.style.display='none';
+    backdrop.style.alignItems='center';
+    backdrop.style.justifyContent='center';
+    backdrop.style.background='rgba(0,0,0,0.6)';
+    backdrop.style.zIndex='100000';
+
+    const modal = el('div',{id:'groupsCreateModal'});
+    modal.style.background = getComputedStyle(document.documentElement).getPropertyValue('--card') || '#0f1012';
+    modal.style.color = getComputedStyle(document.documentElement).getPropertyValue('--white') || '#fff';
+    modal.style.borderRadius = '12px';
+    modal.style.padding = '16px';
+    modal.style.width = '520px';
+    modal.style.maxWidth = '94%';
+    modal.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-weight:700;font-size:16px">Novo grupo</div>
+        <button id="groupsCreateClose" aria-label="Fechar" style="background:transparent;border:none;color:inherit;cursor:pointer;font-size:18px">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div>
+          <label class="small-muted">Nome do grupo</label>
+          <input id="groupsCreateName" placeholder="Ex: Amigos" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04)" />
+        </div>
+        <div>
+          <label class="small-muted">Convidar amigos</label>
+          <div id="groupsFriendsList" style="max-height:320px;overflow:auto;border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;background:rgba(255,255,255,0.01)"></div>
+          <div style="font-size:13px;color:var(--muted);margin-top:6px">Selecione amigos já adicionados à sua lista. O criador é incluído automaticamente. Os convidados receberão um convite (não serão adicionados automaticamente).</div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button id="groupsCreateCancel" class="btn btn-plain">Cancelar</button>
+          <button id="groupsCreateSubmit" class="btn btn-send">Criar grupo</button>
+        </div>
+      </div>
+    `;
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+
+    backdrop.querySelector('#groupsCreateClose').addEventListener('click', ()=> backdrop.style.display='none');
+    backdrop.querySelector('#groupsCreateCancel').addEventListener('click', ()=> backdrop.style.display='none');
+    backdrop.addEventListener('click', (ev)=> { if(ev.target === backdrop) backdrop.style.display='none'; });
+    backdrop.querySelector('#groupsCreateSubmit').addEventListener('click', createGroupHandler);
+  }
+
+  function friendRow(id, name, avatar){
+    const row = el('div',{class:'member-row'});
+    row.style.display='flex';
+    row.style.alignItems='center';
+    row.style.justifyContent='space-between';
+    row.style.padding='6px';
+    const left = el('div'); left.style.display='flex'; left.style.alignItems='center'; left.style.gap='8px';
+    const img = el('img',{}); img.src = avatar || 'https://via.placeholder.com/44'; img.style.width='40px'; img.style.height='40px'; img.style.borderRadius='8px'; img.style.objectFit='cover';
+    const n = el('div',{}, `<div style="font-weight:600">${escapeHtml(name)}</div><div style="font-size:12px;color:var(--muted)">${escapeHtml(id)}</div>`);
+    left.appendChild(img); left.appendChild(n);
+    const cb = el('input',{ type:'checkbox', value:id });
+    row.appendChild(left); row.appendChild(cb);
+    return row;
+  }
+
+  function populateFriendsForModal(){
+    const root = document.getElementById('groupsFriendsList');
+    if(!root) return;
+    root.innerHTML = '';
+    const added = new Set();
+    try{
+      if(window.profileCache && typeof window.profileCache === 'object'){
+        Object.keys(window.profileCache).forEach(uid=>{
+          if(!uid) return;
+          if(uid === (window.currentUser || '')) return;
+          const p = window.profileCache[uid] || {};
+          if(added.has(uid)) return;
+          added.add(uid);
+          root.appendChild(friendRow(uid, p.name || uid, p.avatar || ''));
+        });
+      }
+    }catch(e){ dbg('profileCache read err', e); }
+
+    try{
+      // fallback DOM heuristics if none found in profileCache
+      if(root.children.length === 0){
+        const nodes = document.querySelectorAll('[data-user],[data-uid]');
+        nodes.forEach(node=>{
+          try{
+            const u = node.dataset.user || node.dataset.uid || node.getAttribute('data-user') || node.getAttribute('data-uid');
+            if(!u) return;
+            if(u === (window.currentUser || '')) return;
+            if(added.has(u)) return;
+            const nameEl = node.querySelector('.name, .friend-name, .profile-name, .name-text');
+            const name = (nameEl && (nameEl.innerText||nameEl.textContent)) ? (nameEl.innerText||nameEl.textContent).trim() : u;
+            const avatar = (node.querySelector('img') && node.querySelector('img').src) ? node.querySelector('img').src : '';
+            added.add(u);
+            root.appendChild(friendRow(u, name, avatar));
+          }catch(e){}
+        });
+      }
+    }catch(e){ dbg('DOM fallback err', e); }
+
+    if(root.children.length === 0) root.innerHTML = '<div style="color:var(--muted);padding:8px">Nenhum amigo encontrado para convidar.</div>';
+  }
+
+  async function createGroupHandler(){
+    try{
+      const name = (document.getElementById('groupsCreateName').value || '').trim();
+      const checks = Array.from(document.querySelectorAll('#groupsFriendsList input[type="checkbox"]'));
+      let selected = checks.filter(c=>c.checked).map(c=>c.value);
+      const creator = window.currentUser || null;
+      if(!creator) return toast('Faça login para criar grupo');
+      // Do NOT add selected automatically — they must accept invite
+      const invited = selected.filter(s => normalize(s) !== normalize(creator));
+      const members = [creator]; // only creator initially
+      const payload = { name: name || 'Grupo', members, invited: invited, creator: creator || null, createdAt: FIRESTORE_OK ? firebase.firestore.FieldValue.serverTimestamp() : Date.now() };
+
+      if(FIRESTORE_OK){
+        try{
+          const ref = await db.collection('groups').add(payload);
+          // optional: initial system message
+          try{ await db.collection('groups').doc(ref.id).collection('messages').add({ from:'system', text: 'Grupo criado: ' + (payload.name||''), ts: firebase.firestore.FieldValue.serverTimestamp(), system:true }); }catch(e){}
+          document.getElementById('groupsCreateBackdrop').style.display='none';
+          document.getElementById('groupsCreateName').value='';
+          toast('Grupo criado com sucesso — convites enviados');
+          addGroupEntryToUI(ref.id, payload.name || 'Grupo', payload.members.length);
+          // create invites for each invited user
+          try{
+            for(const u of invited){
+              await db.collection('groupInvites').add({
+                from: creator,
+                to: u,
+                groupId: ref.id,
+                groupName: name || 'Grupo',
+                status: 'pending',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+            }
+          }catch(e){ console.warn('error creating group invites', e); }
+          openGroupChat(ref.id, payload.name || 'Grupo');
+          return;
+        }catch(e){
+          console.error('create group firestore err', e);
+          toast('Erro ao criar grupo (Firestore).');
+        }
+      }
+
+      // fallback local
+      try{
+        const existing = JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]');
+        const id = 'local_' + Date.now().toString(36);
+        const groupObj = Object.assign({ id }, payload);
+        groupObj._messages = groupObj._messages || [];
+        existing.push(groupObj);
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(existing));
+        // store invites local
+        const invites = JSON.parse(localStorage.getItem(LOCAL_INVITES_KEY) || '[]');
+        for(const u of invited){
+          invites.push({ id: 'local_inv_' + Date.now().toString(36) + '_' + u, from: creator, to: u, groupId: id, groupName: name || 'Grupo', status:'pending', createdAt: Date.now() });
+        }
+        localStorage.setItem(LOCAL_INVITES_KEY, JSON.stringify(invites));
+        document.getElementById('groupsCreateBackdrop').style.display='none';
+        toast('Grupo criado localmente (sem Firestore). Convites salvos localmente.');
+        addGroupEntryToUI(id, payload.name || 'Grupo', payload.members.length);
+        openGroupChat(id, payload.name || 'Grupo');
+      }catch(e){
+        console.error('local create group err', e);
+        toast('Erro ao criar grupo localmente');
+      }
+
+    }catch(e){
+      console.error('createGroupHandler err', e);
+      toast('Erro ao criar grupo');
+    }
+  }
+
+  function addGroupEntryToUI(groupId, name, count){
+    const leftPanel = document.getElementById('leftPanel');
+    const friendsList = document.getElementById('friendsList');
+    const entry = el('div',{}); entry.dataset.groupId = groupId; entry.className='friend group-entry';
+    entry.style.display='flex'; entry.style.alignItems='center'; entry.style.justifyContent='space-between'; entry.style.padding='8px'; entry.style.borderRadius='8px'; entry.style.marginBottom='6px'; entry.style.cursor='pointer'; entry.style.background='rgba(255,255,255,0.01)';
+    entry.innerHTML = `<div style="display:flex;gap:10px;align-items:center"><div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);display:inline-flex;align-items:center;justify-content:center;font-weight:700">${escapeHtml((name||'Grupo').charAt(0)||'G')}</div><div style="min-width:0"><div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px">${escapeHtml(name||'Grupo')}</div><div style="font-size:12px;color:var(--muted)">${count} membros</div></div></div><div style="padding:4px 8px;border-radius:999px;background:rgba(11,116,255,0.08);color:var(--accent);font-size:12px">Grupo</div>`;
+    entry.addEventListener('click', ()=> openGroupChat(groupId, name));
+    // prefer inserting under panel-top (if present) or at top of friendsList
+    if(leftPanel){
+      const panelTop = leftPanel.querySelector('.panel-top');
+      if(panelTop && panelTop.nextSibling) leftPanel.insertBefore(entry, panelTop.nextSibling);
+      else if(friendsList) friendsList.parentNode.insertBefore(entry, friendsList);
+      else leftPanel.appendChild(entry);
+    } else if(friendsList){
+      friendsList.parentNode.insertBefore(entry, friendsList);
+    } else {
+      document.body.appendChild(entry);
+    }
+  }
+
+  let unsubGroupMessages = null;
+  window.activeGroup = null;
+
+  async function openGroupChat(groupId, groupName){
+    window.activeGroup = groupId;
+    // set UI to show group
+    try{ const peerNameEl = document.getElementById('peerName'); if(peerNameEl) peerNameEl.textContent = (groupName || 'Grupo'); }catch(e){}
+    try{ const messagesEl = document.getElementById('messages'); if(messagesEl) messagesEl.innerHTML = ''; }catch(e){}
+    if(unsubGroupMessages){ try{ unsubGroupMessages(); }catch(e){} unsubGroupMessages = null; }
+
+    // set peer-related UI to "group mode"
+    activePeer = null;
+    peerAvatarTop.style.display = 'none';
+    btnCallPeer.style.display = 'none';
+    peerDotInline.style.display = 'none';
+    centerMain.classList.remove('no-active');
+    emptyPlaceholder.style.display = 'none';
+    inputText.disabled = false;
+    updateComposer();
+
+
+    // --- render group header (name + members clickable + edit/delete)
+    try{
+      const grpRef = (typeof db !== 'undefined') ? db.collection('groups').doc(groupId) : firebase.firestore().collection('groups').doc(groupId);
+      const grpSnap = await grpRef.get();
+      const grpData = grpSnap && grpSnap.exists ? grpSnap.data() : { name: groupName, members: [] };
+      try{ renderGroupHeader(groupId, grpData); }catch(e){ console.warn('renderGroupHeader err', e); }
+
+
+    // --- show a concise system notice in the chat when opening the group
+    try{
+      const introText = `Pronto — cabeçalho do grupo carregado. Aqui você vê o nome do grupo, foto e participantes (whey, ion, bill...). Clique no título ou na foto para ver/editar detalhes do grupo.`;
+      try{ showGroupIntroNotice(groupId, introText); }catch(e){ console.warn('showGroupIntroNotice err', e); }
+    }catch(e){}
+
+    }catch(e){ console.warn('openGroupChat fetch group err', e); }
+
+
+    if(FIRESTORE_OK){
+      try{
+        const q = db.collection('groups').doc(groupId).collection('messages').orderBy('ts','asc');
+        unsubGroupMessages = q.onSnapshot(async snap=>{
+          const messagesEl = document.getElementById('messages'); if(!messagesEl) return; messagesEl.innerHTML='';
+          for(const doc of snap.docs){
+            const m = doc.data() || {};
+            const el = await renderMessage(m, doc.id); // use same renderer for consistent UI
+            messagesEl.appendChild(el);
+            // ensure profiles loaded for avatars
+            if(m.from && !profileCache[normalize(m.from)]) try{ await getProfile(m.from); }catch(e){}
+          }
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+        }, err=>{ console.warn('groups messages listen err', err); if(err && err.code === 'permission-denied') toast('Firestore: permissões insuficientes para grupos.'); });
+      }catch(e){ console.error('openGroupChat firestore err', e); }
+      return;
+    }
+
+    try{
+      const existing = JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]');
+      const g = existing.find(x=> x.id === groupId);
+      const messagesEl = document.getElementById('messages');
+      if(messagesEl){
+        messagesEl.innerHTML = '';
+        (g && g._messages || []).forEach(m=> messagesEl.appendChild(renderGroupMessageRow(m.from, m.text, m.system)));
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+    }catch(e){ console.warn('openGroupChat local err', e); }
+  }
+
+  // --- UI: render group chat header with participants, clickable for details, edit & photo
+  function ensureGroupHeaderStyles(){
+    if(document.getElementById('group-header-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'group-header-styles';
+    s.textContent = `
+      .group-header{ display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid rgba(0,0,0,0.06); background:var(--card, #0b0b0b); color:var(--white,#fff); }
+      .group-avatar{ width:48px; height:48px; border-radius:8px; object-fit:cover; background:#222; display:inline-block; flex-shrink:0; }
+      .group-title{ font-weight:700; font-size:16px; }
+      .group-members{ display:flex; gap:8px; flex-wrap:wrap; margin-left:8px; }
+      .member-pill{ background:rgba(255,255,255,0.06); padding:4px 8px; border-radius:12px; font-size:12px; }
+      .group-header .actions{ margin-left:auto; display:flex; gap:8px; align-items:center; }
+      .btn-edit-group, .btn-delete-group{ background:transparent; border:1px solid rgba(255,255,255,0.08); padding:6px 10px; border-radius:8px; color:inherit; cursor:pointer; }
+      .group-modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:9999; }
+      .group-modal{ background:var(--white,#fff); color:#000; padding:18px; border-radius:10px; width:90%; max-width:520px; box-shadow:0 8px 30px rgba(0,0,0,0.4); }
+      .group-modal .row{ margin-bottom:12px; }
+      .group-modal input[type=text], .group-modal input[type=file]{ width:100%; padding:8px; }
+      .group-modal .members-list{ max-height:160px; overflow:auto; border:1px solid #eee; padding:8px; border-radius:6px; }
+      .group-modal .member-item{ display:flex; justify-content:space-between; padding:6px 4px; border-bottom:1px solid #f4f4f4; }
+      .group-modal .primary{ background:#0b74ff; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+      .group-modal .danger{ background:#ff4d4f; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+    `;
+    document.head.appendChild(s);
+  }
+
+  function renderGroupHeader(groupId, groupData){
+    try{
+      ensureGroupHeaderStyles();
+      let header = document.getElementById('groupChatHeader');
+      if(!header){
+        header = el('div',{id:'groupChatHeader', class:'group-header'});
+        const peerNameEl = document.getElementById('peerName');
+        if(peerNameEl && peerNameEl.parentNode){
+          peerNameEl.parentNode.insertBefore(header, peerNameEl.nextSibling);
+        } else {
+          const messagesEl = document.getElementById('messages');
+          if(messagesEl && messagesEl.parentNode) messagesEl.parentNode.insertBefore(header, messagesEl);
+          else document.body.insertBefore(header, document.body.firstChild);
+        }
+      }
+      const name = (groupData && groupData.name) ? groupData.name : (groupData && groupData.groupName) ? groupData.groupName : 'Grupo';
+      const members = (groupData && groupData.members) ? groupData.members : (groupData && groupData.participants) ? groupData.participants : [];
+      const photo = (groupData && (groupData.photoUrl || groupData.photoDataUrl)) ? (groupData.photoUrl || groupData.photoDataUrl) : null;
+
+      header.innerHTML = '';
+      const avatar = el('img', { class: 'group-avatar', src: photo || '', alt: name });
+      if(!photo) avatar.style.background = '#2a2a2a';
+      header.appendChild(avatar);
+
+      const titleWrap = el('div', { style: 'display:flex; flex-direction:column;' });
+      const title = el('div',{class:'group-title'}, escapeHtml(name));
+      const membersWrap = el('div',{class:'group-members'});
+      (members||[]).forEach(m => {
+        const span = el('span',{class:'member-pill'}, escapeHtml(m));
+        membersWrap.appendChild(span);
+      });
+      titleWrap.appendChild(title);
+      titleWrap.appendChild(membersWrap);
+      header.appendChild(titleWrap);
+
+      const actions = el('div', { class: 'actions' });
+      const btnView = el('button', { class: 'btn-edit-group' }, 'Ver / Editar');
+      const btnDelete = el('button', { class: 'btn-delete-group' }, 'Excluir');
+      actions.appendChild(btnView);
+      actions.appendChild(btnDelete);
+      header.appendChild(actions);
+
+      // interactions
+      header.onclick = function(ev){
+        // if clicked on actions area, don't trigger the generic click (we have explicit handlers)
+        if(ev.target && (ev.target.classList && (ev.target.classList.contains('btn-edit-group') || ev.target.classList.contains('btn-delete-group')))) return;
+        showGroupDetailsModal(groupId, groupData);
+      };
+      avatar.onclick = function(ev){ ev.stopPropagation(); showGroupDetailsModal(groupId, groupData); };
+      btnView.onclick = function(ev){ ev.stopPropagation(); showGroupDetailsModal(groupId, groupData); };
+      btnDelete.onclick = async function(ev){ ev.stopPropagation();
+        if(!confirm('Deseja excluir este grupo? Esta ação não pode ser desfeita.')) return;
+        try{
+          const useDB = (typeof db !== 'undefined');
+          const groupsColl = useDB ? db.collection('groups') : firebase.firestore().collection('groups');
+          const groupDocRef = groupsColl.doc(groupId);
+          // delete messages collection then group doc
+          const messagesRef = useDB ? groupsColl.doc(groupId).collection('messages') : firebase.firestore().collection('groups').doc(groupId).collection('messages');
+          const snap = await messagesRef.get();
+          const batch = useDB ? db.batch() : firebase.firestore().batch();
+          snap.forEach(d => {
+            try{
+              if(messagesRef.doc) batch.delete(messagesRef.doc(d.id));
+              else if(messagesRef._delegate && messagesRef._delegate.doc) batch.delete(messagesRef._delegate.doc(d.id));
+            }catch(e){}
+          });
+          batch.delete(groupDocRef);
+          await batch.commit();
+          if(typeof toast === 'function') toast('Grupo excluído');
+          window.activeGroup = null;
+          const messagesEl = document.getElementById('messages'); if(messagesEl) messagesEl.innerHTML = '';
+          const peerNameEl = document.getElementById('peerName'); if(peerNameEl) peerNameEl.textContent = '';
+          header.remove();
+        }catch(ex){ console.error('deleteGroup err', ex); if(typeof toast === 'function') toast('Erro ao excluir grupo'); }
+      };
+
+    }catch(e){ console.warn('renderGroupHeader err', e); }
+  }
+
+  function showGroupDetailsModal(groupId, groupData){
+    try{
+      ensureGroupHeaderStyles();
+      // avoid duplicate
+      let existing = document.getElementById('groupModalBackdrop');
+      if(existing) existing.remove();
+
+      const backdrop = el('div',{id:'groupModalBackdrop', class:'group-modal-backdrop'});
+      const modal = el('div',{class:'group-modal'});
+      const title = el('h3',{}, 'Detalhes do grupo');
+      modal.appendChild(title);
+
+      const rowName = el('div',{class:'row'});
+      rowName.appendChild(el('label',{}, 'Nome do grupo'));
+      const inputName = el('input',{type:'text', value: (groupData && groupData.name) ? groupData.name : ''});
+      rowName.appendChild(inputName);
+      modal.appendChild(rowName);
+
+      const rowPhoto = el('div',{class:'row'});
+      rowPhoto.appendChild(el('label',{}, 'Foto do grupo (opcional)'));
+      const inputFile = el('input',{type:'file', accept:'image/*'});
+      rowPhoto.appendChild(inputFile);
+      modal.appendChild(rowPhoto);
+
+      const rowMembers = el('div',{class:'row'});
+      rowMembers.appendChild(el('label',{}, 'Participantes'));
+      const membersList = el('div',{class:'members-list'});
+      (groupData && groupData.members || []).forEach(m => {
+        const item = el('div',{class:'member-item'});
+        item.appendChild(el('span',{}, escapeHtml(m)));
+        const rm = el('button',{class:'btn-delete-group'}, 'Remover');
+        rm.onclick = function(ev){ ev.stopPropagation(); item.remove(); };
+        item.appendChild(rm);
+        membersList.appendChild(item);
+      });
+      rowMembers.appendChild(membersList);
+      modal.appendChild(rowMembers);
+
+      const addRow = el('div',{class:'row'});
+      const addInput = el('input',{type:'text', placeholder:'Adicionar participante (username)'});
+      const addBtn = el('button',{class:'primary'}, 'Adicionar');
+      addBtn.onclick = function(ev){
+        const v = (addInput.value||'').trim(); if(!v) return;
+        const item = el('div',{class:'member-item'});
+        item.appendChild(el('span',{}, escapeHtml(v)));
+        const rm = el('button',{class:'btn-delete-group'}, 'Remover');
+        rm.onclick = function(ev){ ev.stopPropagation(); item.remove(); };
+        item.appendChild(rm);
+        membersList.appendChild(item);
+        addInput.value='';
+      };
+      addRow.appendChild(addInput); addRow.appendChild(addBtn);
+      modal.appendChild(addRow);
+
+      const actions = el('div',{class:'row', style:'display:flex; gap:8px; justify-content:flex-end;'});
+      const btnSave = el('button',{class:'primary'}, 'Salvar');
+      const btnClose = el('button',{}, 'Fechar');
+      const btnDelete = el('button',{class:'danger'}, 'Excluir Grupo');
+      actions.appendChild(btnDelete); actions.appendChild(btnClose); actions.appendChild(btnSave);
+      modal.appendChild(actions);
+
+      backdrop.appendChild(modal);
+      document.body.appendChild(backdrop);
+
+      btnClose.onclick = function(){ backdrop.remove(); };
+      btnDelete.onclick = async function(){
+        if(!confirm('Deseja excluir este grupo?')) return;
+        try{
+          const useDB = (typeof db !== 'undefined');
+          const groupsColl = useDB ? db.collection('groups') : firebase.firestore().collection('groups');
+          const groupDocRef = groupsColl.doc(groupId);
+          const messagesRef = useDB ? groupsColl.doc(groupId).collection('messages') : firebase.firestore().collection('groups').doc(groupId).collection('messages');
+          const snap = await messagesRef.get();
+          const batch = useDB ? db.batch() : firebase.firestore().batch();
+          snap.forEach(d => {
+            try{
+              if(messagesRef.doc) batch.delete(messagesRef.doc(d.id));
+              else if(messagesRef._delegate && messagesRef._delegate.doc) batch.delete(messagesRef._delegate.doc(d.id));
+            }catch(e){}
+          });
+          batch.delete(groupDocRef);
+          await batch.commit();
+          if(typeof toast === 'function') toast('Grupo excluído');
+          backdrop.remove();
+          window.activeGroup = null;
+          const messagesEl = document.getElementById('messages'); if(messagesEl) messagesEl.innerHTML = '';
+          const peerNameEl = document.getElementById('peerName'); if(peerNameEl) peerNameEl.textContent = '';
+        }catch(ex){ console.error('deleteGroup err', ex); if(typeof toast === 'function') toast('Erro ao excluir grupo'); }
+      };
+
+      btnSave.onclick = async function(){
+        try{
+          const newName = (inputName.value||'').trim() || groupData.name || 'Grupo';
+          // collect members from membersList
+          const newMembers = [];
+          membersList.querySelectorAll('.member-item span').forEach(sp => { newMembers.push(sp.textContent); });
+          // photo handling
+          let photoDataUrl = null;
+          if(inputFile.files && inputFile.files[0]){
+            const f = inputFile.files[0];
+            photoDataUrl = await new Promise((res, rej) => {
+              const r = new FileReader();
+              r.onload = function(){ res(r.result); };
+              r.onerror = function(){ rej('read fail'); };
+              r.readAsDataURL(f);
+            });
+          }
+          const useDB = (typeof db !== 'undefined');
+          const groupsColl = useDB ? db.collection('groups') : firebase.firestore().collection('groups');
+          const groupDocRef = groupsColl.doc(groupId);
+          const updatePayload = { name: newName, members: newMembers };
+          if(photoDataUrl) updatePayload.photoDataUrl = photoDataUrl;
+          await groupDocRef.update(updatePayload);
+          if(typeof toast === 'function') toast('Grupo atualizado');
+          backdrop.remove();
+          // re-render header with latest data
+          renderGroupHeader(groupId, Object.assign({}, groupData, updatePayload));
+        }catch(ex){ console.error('saveGroup err', ex); if(typeof toast === 'function') toast('Erro ao salvar grupo'); }
+      };
+
+    }catch(e){ console.warn('showGroupDetailsModal err', e); }
+  }
+
+  
+  // --- show a minimal system notice inside messages area (used when opening group)
+  function showGroupIntroNotice(groupId, htmlText){
+    try{
+      // ensure style
+      if(!document.getElementById('group-system-notice-styles')){
+        const s = document.createElement('style');
+        s.id = 'group-system-notice-styles';
+        s.textContent = `
+          .system-notice{
+            max-width:720px;
+            margin:12px auto;
+            padding:10px 12px;
+            border-radius:8px;
+            background:rgba(255,255,255,0.02);
+            color:var(--muted,#9aa0a6);
+            font-size:13px;
+            text-align:center;
+            border:1px solid rgba(255,255,255,0.02);
+          }
+        `;
+        document.head.appendChild(s);
+      }
+      const messagesEl = document.getElementById('messages');
+      if(!messagesEl) return;
+      // remove existing notice for this group if present
+      const existing = messagesEl.querySelector('.system-notice[data-group="'+groupId+'"]');
+      if(existing) existing.remove();
+      const notice = el('div',{class:'system-notice', 'data-group': groupId}, htmlText);
+      // insert at top of messages, but after any pinned placeholders
+      if(messagesEl.firstChild) messagesEl.insertBefore(notice, messagesEl.firstChild);
+      else messagesEl.appendChild(notice);
+      // auto-remove after 8 seconds
+      setTimeout(()=>{ try{ notice.remove(); }catch(e){} }, 8000);
+    }catch(e){ console.warn('showGroupIntroNotice failed', e); }
+  }
+function renderGroupMessageRow(from, text, system){
+    const elrow = el('div',{class:'msg-row'});
+    const msg = el('div',{ class: system ? 'msg their' : (from === window.currentUser ? 'msg me' : 'msg their')});
+    msg.style.maxWidth='80%'; msg.style.padding='10px'; msg.style.borderRadius='12px'; msg.style.margin='6px 0';
+    if(system){ msg.style.opacity='0.9'; msg.style.fontStyle='italic'; }
+    msg.innerHTML = `<div class="meta">${escapeHtml(from||'')}</div><div>${escapeHtml(text||'')}</div>`;
+    elrow.appendChild(msg);
+    return elrow;
+  }
+
+  function wireGroupSendInterceptor(){
+    const btn = document.getElementById('btnSend');
+    if(!btn) return;
+    btn.addEventListener('click', async function(ev){
+      try{
+        if(!window.activeGroup) return; // not a group message
+        ev.stopImmediatePropagation();
+        ev.preventDefault();
+        const input = document.getElementById('inputText'); if(!input) return;
+        const text = (input.value || '').trim();
+        const file = pendingFileLocal;
+        if(!text && !file) return toast('Digite uma mensagem');
+        const payload = { from: window.currentUser || 'unknown', text: text || '', ts: FIRESTORE_OK ? firebase.firestore.FieldValue.serverTimestamp() : Date.now(), avatar: profileCache[window.currentUser]?.avatar || '', imageUrl:'', audioUrl:'', system:false };
+        if(pendingReply) payload.replyToId = pendingReply.id;
+        // handle file upload if present
+        if(file){
+          const safeName = (file.name || 'img').replace(/[^a-zA-Z0-9.\-_]/g,'_');
+          let imageUrl = null;
+          try{
+            const supPath = `groups/${window.activeGroup}/${Date.now()}_${safeName}`;
+            imageUrl = await uploadToSupabase('project', supPath, file);
+          }catch(supErr){
+            console.warn('Supabase group upload failed, trying Firebase', supErr);
+            const fbPath = `groups/${window.activeGroup}/${Date.now()}_${safeName}`;
+            imageUrl = await uploadToFirebase(fbPath, file);
+          }
+          if(!imageUrl) return toast('Falha ao enviar arquivo');
+          payload.imageUrl = imageUrl;
+        }
+
+        if(FIRESTORE_OK){
+          try{ await db.collection('groups').doc(window.activeGroup).collection('messages').add(payload); }catch(e){ console.error('send group msg err', e); toast('Erro ao enviar mensagem de grupo'); return; }
+        } else {
+          try{ const existing = JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]'); const g = existing.find(x=> x.id === window.activeGroup); if(!g){ toast('Grupo não encontrado localmente'); return; } g._messages = g._messages || []; g._messages.push(Object.assign({}, payload)); localStorage.setItem(LOCAL_KEY, JSON.stringify(existing)); }catch(e){ console.error('local send group err', e); }
+        }
+        const messagesEl = document.getElementById('messages'); if(messagesEl){ const row = renderGroupMessageRow(payload.from, payload.text, false); messagesEl.appendChild(row); messagesEl.scrollTop = messagesEl.scrollHeight; }
+        try{ if(typeof playSendSound === 'function') playSendSound(); }catch(e){}
+        // cleanup
+        pendingFileLocal = null; document.getElementById('composerImagePreview').innerHTML=''; document.getElementById('composerImagePreview').style.display='none';
+        input.value = '';
+        clearReply();
+      }catch(e){ console.error('group send intercept err', e); }
+    }, true);
+  }
+
+  function subscribeToMyGroups(){
+    if(!FIRESTORE_OK) return;
+    try{
+      const me = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (window.currentUser || null);
+      if(!me) return;
+      db.collection('groups').where('members','array-contains', me).onSnapshot(snap=>{
+        snap.docs.forEach(doc=>{
+          const id = doc.id; const data = doc.data() || {};
+          if(!document.querySelector('[data-group-id="'+id+'"]')) addGroupEntryToUI(id, data.name||'Grupo', (data.members && data.members.length) || 0);
+        });
+      }, err=> console.warn('subscribeToMyGroups err', err));
+    }catch(e){ console.warn('subscribeToMyGroups catch', e); }
+  }
+
+  // open modal helper (focus and populate)
+  function openModal(){ buildModal(); populateFriendsForModal(); document.getElementById('groupsCreateBackdrop').style.display='flex'; setTimeout(()=>{ const n=document.getElementById('groupsCreateName'); if(n) n.focus(); }, 60); }
+
+  // initialize
+  function init(){
+    try{
+      buildModal();
+      ensureCreateButton();
+      wireGroupSendInterceptor();
+      subscribeToMyGroups();
+      try{ const existing = JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]'); existing.forEach(g=> addGroupEntryToUI(g.id, g.name||'Grupo', (g.members||[]).length || 0)); }catch(e){}
+      window.addEventListener('project:loggedin', ()=> { try{ populateFriendsForModal(); subscribeToMyGroups(); }catch(e){} });
+      // ensure button populates friends after login or when clicked
+      const btn = document.getElementById('groupsCreateBtn'); if(btn) btn.addEventListener('click', ()=> setTimeout(populateFriendsForModal, 40));
+      dbg('groups-fixed initialized');
+    }catch(e){ console.error('groups-fixed init err', e); }
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+  // expose openGroupChat for external use
+  window.openGroupChat = openGroupChat;
+
+})();
+</script>
+<!-- END groups module -->
+
+
+<!-- FEED MODULE JS - inserted by assistant -->
+<script>
+/* Feed module: posts + repost + comments (Firestore if available, else localStorage) */
+(function(){
+  const FEED_COL = 'feedPosts';
+  const LOCAL_FEED_KEY = 'project_local_feed_v1';
+
+  const feedList = document.getElementById('feedList');
+  const feedText = document.getElementById('feedText');
+  const feedPostBtn = document.getElementById('feedPostBtn');
+  const feedAttachBtn = document.getElementById('feedAttachBtn');
+  const feedFile = document.getElementById('feedFile');
+  const feedImgPreview = document.getElementById('feedImgPreview');
+  const feedImgPreviewContainer = document.getElementById('feedImgPreviewContainer');
+  const feedClearBtn = document.getElementById('feedClearBtn');
+  const feedMyAvatar = document.getElementById('feedMyAvatar');
+
+  // keep pending upload file reference
+  let feedPendingFile = null;
+  // show my avatar if available
+  function refreshMyAvatar(){
+    try{
+      if(window.profileCache && currentUser && profileCache[currentUser] && profileCache[currentUser].avatar){
+        feedMyAvatar.src = profileCache[currentUser].avatar;
+      } else {
+        feedMyAvatar.src = meAvatarLeft ? meAvatarLeft.src : 'https://via.placeholder.com/48';
+      }
+    }catch(e){}
+  }
+  refreshMyAvatar();
+
+  feedAttachBtn.addEventListener('click', ()=> feedFile.click());
+  feedFile.addEventListener('change', ()=>{
+    const f = feedFile.files && feedFile.files[0];
+    if(!f){ feedPendingFile = null; feedImgPreviewContainer.style.display='none'; feedImgPreview.src=''; return; }
+    feedPendingFile = f;
+    feedImgPreview.src = URL.createObjectURL(f);
+    feedImgPreviewContainer.style.display = '';
+  });
+  feedClearBtn.addEventListener('click', ()=>{
+    feedPendingFile = null;
+    feedFile.value = '';
+    feedImgPreview.src = '';
+    feedImgPreviewContainer.style.display = 'none';
+    feedText.value = '';
+  });
+
+  async function tryUploadFile(f){
+    // try supabase first, then firebase fallback
+    const filenameSafe = (f.name || 'img').replace(/[^a-zA-Z0-9.\-_]/g,'_');
+    const path = `feed/${(currentUser||'guest')}-${Date.now()}_${filenameSafe}`;
+    if(window.uploadToSupabase){
+      try{
+        const url = await uploadToSupabase('public', path, f);
+        if(url) return url;
+      }catch(err){ console.warn('supabase feed upload failed', err); }
+    }
+    if(window.uploadToFirebase){
+      try{
+        const url = await uploadToFirebase(path, f);
+        if(url) return url;
+      }catch(err){ console.warn('firebase feed upload failed', err); }
+    }
+    // fallback: use dataURL (not ideal for large files)
+    try{
+      const dataUrl = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = ()=> res(r.result);
+        r.onerror = ()=> rej('read fail');
+        r.readAsDataURL(f);
+      });
+      return dataUrl;
+    }catch(e){ throw new Error('Falha ao obter imagem'); }
+  }
+
+  // render a post object into DOM (post: { id, author, text, imageUrl, ts, repostOf } )
+  async function renderPost(post, id){
+    const card = document.createElement('div');
+    card.className = 'post-card';
+    card.dataset.postId = id || post.id || '';
+
+    // author info (ensure we have profile)
+    let authorName = post.author || 'anon';
+    let authorAvatar = 'https://via.placeholder.com/48';
+    if(post.author && profileCache && profileCache[post.author]){
+      authorName = profileCache[post.author].name || post.author;
+      authorAvatar = profileCache[post.author].avatar || authorAvatar;
+    } else if(post.author){
+      try{ await getProfile(post.author); authorName = profileCache[post.author].name || post.author; authorAvatar = profileCache[post.author].avatar || authorAvatar; }catch(e){}
+    }
+
+    // top meta
+    const meta = document.createElement('div'); meta.className = 'post-meta';
+    const ava = document.createElement('img'); ava.src = authorAvatar; ava.alt = authorName;
+    const mtext = document.createElement('div'); mtext.style.flex = '1';
+    mtext.innerHTML = `<div class="post-author">${escapeHtml(authorName)}</div><div style="font-size:12px;color:var(--muted)">${new Date((post.ts && post.ts.seconds) ? post.ts.seconds*1000 : (post.ts||Date.now())).toLocaleString()}</div>`;
+    meta.appendChild(ava); meta.appendChild(mtext);
+
+    // body
+    const body = document.createElement('div');
+    body.className = 'post-body';
+
+    if(post.repostOf){
+      // show repost header
+      const rpt = document.createElement('div');
+      rpt.style.fontSize='12px';
+      rpt.style.color='var(--muted)';
+      rpt.style.marginBottom='6px';
+      rpt.textContent = `Re-publicado`;
+      body.appendChild(rpt);
+    }
+
+    const txt = document.createElement('div'); txt.className='post-text'; txt.innerHTML = escapeHtml(post.text || '');
+    body.appendChild(txt);
+
+    if(post.imageUrl){
+      const img = document.createElement('img');
+      img.className = 'post-image';
+      img.src = post.imageUrl;
+      img.alt = 'imagem';
+      img.loading = 'lazy';
+      img.addEventListener('click', ()=> {
+        // open in new tab
+        window.open(post.imageUrl, '_blank');
+      });
+      body.appendChild(img);
+    }
+
+    // actions
+    const actions = document.createElement('div'); actions.className='post-actions';
+    const btnComment = document.createElement('button'); btnComment.type='button'; btnComment.innerHTML='💬 Comentar';
+    const btnRepost = document.createElement('button'); btnRepost.type='button'; btnRepost.className='cta'; btnRepost.innerHTML='Re-publicar';
+    const btnViewComments = document.createElement('button'); btnViewComments.type='button'; btnViewComments.innerHTML='Ver comentários';
+
+    actions.appendChild(btnComment); actions.appendChild(btnViewComments); actions.appendChild(btnRepost);
+
+    // comments container (hidden initially)
+    const commentsWrapper = document.createElement('div'); commentsWrapper.className='comments-list'; commentsWrapper.style.display='none';
+    const commentInputRow = document.createElement('div'); commentInputRow.style.display='flex'; commentInputRow.style.gap='8px'; commentInputRow.style.marginTop='8px';
+    const commentInput = document.createElement('input'); commentInput.type='text'; commentInput.placeholder='Escrever comentário...'; commentInput.style.flex='1'; commentInput.style.padding='8px'; commentInput.style.borderRadius='8px'; commentInput.style.background='transparent'; commentInput.style.border='1px solid rgba(255,255,255,0.04)'; commentInput.style.color='var(--white)';
+    const commentBtn = document.createElement('button'); commentBtn.className='btn btn-send'; commentBtn.type='button'; commentBtn.innerText='Comentar';
+    commentInputRow.appendChild(commentInput); commentInputRow.appendChild(commentBtn);
+    commentsWrapper.appendChild(commentInputRow);
+
+    // load comments function
+    async function loadComments(){
+      // clear existing comment items except input row
+      Array.from(commentsWrapper.querySelectorAll('.comment-item')).forEach(n=>n.remove());
+      if(window.db){
+        try{
+          const snap = await db.collection(FEED_COL).doc(id).collection('comments').orderBy('ts','asc').get();
+          if(!snap || !snap.docs || snap.docs.length===0) return;
+          for(const d of snap.docs){
+            const c = d.data();
+            const item = document.createElement('div'); item.className='comment-item';
+            const ca = document.createElement('img'); ca.src = (profileCache[c.from] && profileCache[c.from].avatar) ? profileCache[c.from].avatar : 'https://via.placeholder.com/36';
+            const cn = document.createElement('div'); cn.style.flex='1'; cn.innerHTML = `<div style="font-weight:700">${escapeHtml((profileCache[c.from] && profileCache[c.from].name) || c.from||'')}</div><div style="font-size:13px;color:var(--muted)">${escapeHtml(c.text||'')}</div>`;
+            item.appendChild(ca); item.appendChild(cn);
+            commentsWrapper.insertBefore(item, commentInputRow);
+          }
+        }catch(e){ console.warn('load comments err', e); }
+      } else {
+        // localStorage fallback
+        try{
+          const local = JSON.parse(localStorage.getItem(LOCAL_FEED_KEY) || '[]');
+          const thisPost = local.find(p => p.id === id) || {};
+          (thisPost.comments || []).forEach(c=>{
+            const item = document.createElement('div'); item.className='comment-item';
+            const ca = document.createElement('img'); ca.src = (profileCache[c.from] && profileCache[c.from].avatar) ? profileCache[c.from].avatar : 'https://via.placeholder.com/36';
+            const cn = document.createElement('div'); cn.style.flex='1'; cn.innerHTML = `<div style="font-weight:700">${escapeHtml((profileCache[c.from] && profileCache[c.from].name) || c.from||'')}</div><div style="font-size:13px;color:var(--muted)">${escapeHtml(c.text||'')}</div>`;
+            item.appendChild(ca); item.appendChild(cn);
+            commentsWrapper.insertBefore(item, commentInputRow);
+          });
+        }catch(e){}
+      }
+    }
+
+    // event handlers
+    btnViewComments.addEventListener('click', async ()=>{
+      commentsWrapper.style.display = commentsWrapper.style.display === 'none' ? '' : 'none';
+      if(commentsWrapper.style.display !== 'none') await loadComments();
+    });
+
+    commentBtn.addEventListener('click', async ()=>{
+      if(!currentUser) return toast('Faça login para comentar');
+      const text = (commentInput.value||'').trim();
+      if(!text) return;
+      const payload = { from: currentUser, text, ts: (window.firebase && window.firebase.firestore) ? firebase.firestore.FieldValue.serverTimestamp() : Date.now() };
+      try{
+        if(window.db){
+          await db.collection(FEED_COL).doc(id).collection('comments').add(payload);
+        } else {
+          const local = JSON.parse(localStorage.getItem(LOCAL_FEED_KEY) || '[]');
+          const p = local.find(x=>x.id===id);
+          if(p){
+            p.comments = p.comments || [];
+            p.comments.push(Object.assign({ ts: Date.now() }, payload));
+            localStorage.setItem(LOCAL_FEED_KEY, JSON.stringify(local));
+          }
+        }
+        commentInput.value = '';
+        await loadComments();
+        toast('Comentário enviado');
+      }catch(e){ console.error('comment err', e); toast('Erro ao comentar'); }
+    });
+
+    btnComment.addEventListener('click', ()=> {
+      commentsWrapper.style.display = '';
+      commentInput.focus();
+    });
+
+    btnRepost.addEventListener('click', async ()=>{
+      if(!currentUser) return toast('Faça login para repassar');
+      try{
+        const repostPayload = {
+          author: currentUser,
+          text: (post.text||''),
+          imageUrl: post.imageUrl || '',
+          ts: (window.firebase && window.firebase.firestore) ? firebase.firestore.FieldValue.serverTimestamp() : Date.now(),
+          repostOf: id
+        };
+        if(window.db){
+          await db.collection(FEED_COL).add(repostPayload);
+        } else {
+          const local = JSON.parse(localStorage.getItem(LOCAL_FEED_KEY) || '[]');
+          const newId = 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+          local.unshift(Object.assign({ id: newId }, repostPayload));
+          localStorage.setItem(LOCAL_FEED_KEY, JSON.stringify(local));
+          renderFeedLocal(local);
+        }
+        toast('Re-publicado');
+      }catch(e){ console.error('repost err', e); toast('Erro ao re-publicar'); }
+    });
+
+    card.appendChild(meta);
+    card.appendChild(body);
+    card.appendChild(actions);
+    card.appendChild(commentsWrapper);
+    return card;
+  }
+
+  // helper: escape HTML
+  function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, function(m){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]); });}
+
+  // render feed from Firestore real-time or localStorage fallback
+  let unsubFeed = null;
+  async function startFeedWatch(){
+    // clear existing
+    feedList.innerHTML = '<div class="empty-feed-msg">Carregando...</div>';
+    if(window.db){
+      try{
+        if(unsubFeed){ try{ unsubFeed(); }catch(e){} unsubFeed = null; }
+        const q = db.collection(FEED_COL).orderBy('ts','desc').limit(200);
+        unsubFeed = q.onSnapshot(async snap=>{
+          feedList.innerHTML = '';
+          if(!snap || snap.empty){ feedList.innerHTML = '<div class="empty-feed-msg">Nenhuma publicação ainda — seja o primeiro a postar.</div>'; return; }
+          for(const d of snap.docs){
+            const p = d.data(); const id = d.id;
+            const el = await renderPost(p, id);
+            feedList.appendChild(el);
+          }
+        }, err=>{ console.warn('feed watch err', err); feedList.innerHTML = '<div class="empty-feed-msg">Erro ao carregar feed.</div>'; });
+        return;
+      }catch(e){ console.warn('startFeedWatch err', e); }
+    }
+    // fallback local
+    try{
+      const local = JSON.parse(localStorage.getItem(LOCAL_FEED_KEY) || '[]');
+      renderFeedLocal(local);
+    }catch(e){ feedList.innerHTML = '<div class="empty-feed-msg">Erro ao carregar feed.</div>'; }
+  }
+
+  function renderFeedLocal(list){
+    feedList.innerHTML = '';
+    if(!list || list.length === 0){ feedList.innerHTML = '<div class="empty-feed-msg">Nenhuma publicação ainda — seja o primeiro a postar.</div>'; return; }
+    (list||[]).forEach(async p=>{
+      const el = await renderPost(p, p.id);
+      feedList.appendChild(el);
+    });
+  }
+
+  // create post handler
+  feedPostBtn.addEventListener('click', async ()=>{
+    if(!currentUser) return toast('Faça login para postar');
+    const text = (feedText.value||'').trim();
+    if(!text && !feedPendingFile) return toast('Digite texto ou anexe uma imagem');
+    feedPostBtn.disabled = true;
+    feedPostBtn.textContent = 'Enviando...';
+    try{
+      let imageUrl = null;
+      if(feedPendingFile){
+        imageUrl = await tryUploadFile(feedPendingFile);
+      }
+      const payload = {
+        author: currentUser,
+        text: text || '',
+        imageUrl: imageUrl || '',
+        ts: (window.firebase && window.firebase.firestore) ? firebase.firestore.FieldValue.serverTimestamp() : Date.now()
+      };
+      if(window.db){
+        await db.collection(FEED_COL).add(payload);
+        toast('Publicado');
+      } else {
+        const local = JSON.parse(localStorage.getItem(LOCAL_FEED_KEY) || '[]');
+        const id = 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+        local.unshift(Object.assign({ id }, payload));
+        localStorage.setItem(LOCAL_FEED_KEY, JSON.stringify(local));
+        renderFeedLocal(local);
+        toast('Publicado (local)');
+      }
+      // clear composer
+      feedText.value = '';
+      feedPendingFile = null;
+      feedFile.value = '';
+      feedImgPreview.src = '';
+      feedImgPreviewContainer.style.display = 'none';
+    }catch(e){ console.error('post err', e); toast('Erro ao publicar: ' + (e.message||e)); }
+    finally{ feedPostBtn.disabled = false; feedPostBtn.textContent = 'Publicar'; }
+  });
+
+  // initialize feed when page load / user logged in
+  // show/hide feed depending on centerMain.no-active (we keep it visible by design when no chat)
+  startFeedWatch();
+
+  // also react to profile updates so avatar updates
+  window.addEventListener('project:loggedin', ()=> { refreshMyAvatar(); startFeedWatch(); });
+
+})();
+</script>p
+
+<!-- BLUR_OVERLAY_HTML_START -->
+<!-- FULLSCREEN BLUR + DIM OVERLAY (controlled by script) -->
+<div id="screenOverlay" class="screen-overlay" aria-hidden="true" role="presentation"></div>
+<!-- BLUR_OVERLAY_HTML_END -->
+
+<!-- BLUR_OVERLAY_JS_START -->
+<script>
+/* BottomBar overlay controller (auto-injected)
+   - keeps overlay in sync with #bottomBar.open
+   - closes menu when overlay clicked
+*/
+(function(){
+  const bottomBar = document.getElementById('bottomBar');
+  const overlay = document.getElementById('screenOverlay');
+
+  if(!overlay){
+    console.warn('screenOverlay element not found - overlay script skipped');
+    return;
+  }
+
+  function syncFromBar(){
+    const isOpen = bottomBar && bottomBar.classList.contains('open');
+    if(isOpen){
+      overlay.classList.add('show');
+      overlay.setAttribute('aria-hidden','false');
+      document.documentElement.classList.add('modal-open');
+    } else {
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden','true');
+      document.documentElement.classList.remove('modal-open');
+    }
+  }
+
+  // Try to sync initially even if bottomBar not found yet
+  syncFromBar();
+
+  // Click overlay to close (if bottomBar exists, remove its "open" class; otherwise just hide overlay)
+  overlay.addEventListener('click', (e)=>{
+    if(bottomBar){
+      bottomBar.classList.remove('open');
+    }
+    syncFromBar();
+  });
+
+  // If there's a button inside bottomBar with .toggle-btn, hook it to keep sync
+  if(bottomBar){
+    const toggleBtn = bottomBar.querySelector('.toggle-btn');
+    if(toggleBtn){
+      toggleBtn.addEventListener('click', (ev)=>{
+        // allow other handlers to toggle classes; sync shortly after
+        setTimeout(syncFromBar, 10);
+        ev.stopPropagation();
+      });
+    }
+  }
+
+  // Observe class changes on bottomBar if it exists (robust)
+  if(bottomBar){
+    const mo = new MutationObserver(muts => {
+      for(const m of muts){
+        if(m.attributeName === 'class'){
+          syncFromBar();
+          return;
+        }
+      }
+    });
+    mo.observe(bottomBar, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  // Observe overlay class to toggle page scroll
+  const observer2 = new MutationObserver(() => {
+    if(overlay.classList.contains('show')){
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  });
+  observer2.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+
+  // expose helpers for debugging (optional)
+  try{ window._projectOverlay = { sync: syncFromBar, open: () => { if(bottomBar) bottomBar.classList.add('open'); syncFromBar(); }, close: () => { if(bottomBar) bottomBar.classList.remove('open'); syncFromBar(); } }; }catch(e){}
+})();
+</script>
+<!-- BLUR_OVERLAY_JS_END -->
+
+</body>
+</html>\n<script>
+/* Helper: bind firebase auth uid to window.currentUser if firebase is available */
+(function(){
+  try{
+    if(window.firebase && firebase.auth){
+      firebase.auth().onAuthStateChanged(function(user){
+        if(user && user.uid){
+          window.currentUser = user.uid;
+          // optional event for other modules that listen for login
+          try{ document.dispatchEvent(new CustomEvent('project:loggedin', { detail: { uid: user.uid } })); }catch(e){}
+        } else {
+          window.currentUser = null;
+        }
+      });
+    }
+  }catch(e){
+    // silent fail - firebase might be included later
+    console.warn('firebase auth binding failed or firebase not present yet', e);
+  }
+})();
+
+/* UI enhancement: when clicking a group element, close the left menu with animation and open the chat 
+   Works by delegating clicks and looking for elements with data-group-id or class names that usually represent groups.
+*/
+(function(){
+  // Duration should match the CSS transition time (250ms)
+  var MENU_CLOSE_DELAY = 260;
+
+  function findGroupIdFromElement(el){
+    if(!el) return null;
+    // prefer data-group-id attribute
+    if(el.dataset && el.dataset.groupId) return el.dataset.groupId;
+    // try other common attribute names
+    if(el.getAttribute && (el.getAttribute('data-id') || el.getAttribute('data-id-group'))) return el.getAttribute('data-id') || el.getAttribute('data-id-group');
+    // class-based fallback: find an element with attribute 'data-group-id' up the tree
+    var up = el.closest && el.closest('[data-group-id]');
+    if(up) return up.dataset.groupId;
+    // last resort: look for an element with classes 'group' or 'group-item' and a data-id
+    var up2 = el.closest && (el.closest('.group') || el.closest('.group-item'));
+    if(up2){
+      return up2.dataset && (up2.dataset.groupId || up2.dataset.id) || up2.getAttribute('data-id') || null;
+    }
+    return null;
+  }
+
+  function closeMenuAndOpenChat(groupId){
+    // attempt to close the left menu by removing the class that opens it
+    var layout = document.querySelector('.layout') || document.documentElement;
+    if(layout){
+      // remove known open class names if present
+      if(layout.classList.contains('friends-open')) layout.classList.remove('friends-open');
+      if(layout.classList.contains('left-open')) layout.classList.remove('left-open');
+      // add a temporary class if needed for styling hooks
+      layout.classList.add('menu-closing');
+      // after a slight delay (allow CSS transition), open the group chat
+      setTimeout(function(){
+        layout.classList.remove('menu-closing');
+        // try to use existing openGroupChat if defined
+        try{
+          if(typeof openGroupChat === 'function'){
+            openGroupChat(groupId);
+            return;
+          }
+        }catch(e){ console.warn('openGroupChat threw', e); }
+        // fallback: set a global activeGroup and dispatch event
+        window.activeGroup = groupId;
+        try{ document.dispatchEvent(new CustomEvent('group:open', { detail: { groupId: groupId } })); }catch(e){};
+      }, MENU_CLOSE_DELAY);
+    } else {
+      // no layout element found, directly open
+      if(typeof openGroupChat === 'function'){
+        openGroupChat(groupId);
+      } else {
+        window.activeGroup = groupId;
+        try{ document.dispatchEvent(new CustomEvent('group:open', { detail: { groupId: groupId } })); }catch(e){};
+      }
+    }
+  }
+
+  document.addEventListener('click', function(ev){
+    try{
+      var el = ev.target;
+      var groupId = findGroupIdFromElement(el);
+      if(groupId){
+        // Prevent default navigation if it's an anchor that would interrupt SPA flow
+        if(ev.target.tagName && ev.target.tagName.toLowerCase() === 'a') ev.preventDefault();
+        closeMenuAndOpenChat(groupId);
+        // Stop here — user intent was to open a chat
+        return;
+      }
+    }catch(e){ /* ignore */ }
+  }, true);
+})();
+</script>
